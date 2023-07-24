@@ -1,0 +1,11 @@
+{
+  "name": "intertwingle",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "jsdom": "^22.1.0",
+    "lunr": "^2.3.9"
+  }
+}
