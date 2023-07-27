@@ -3,23 +3,14 @@ import path from "path";
 import { createPages } from "./create-pages.js"
 import { simpleWordCount } from "./plugins/simple-word-count.js"
 import { dirname } from 'path';
-
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
-
 import { fileURLToPath } from 'url';
+import {directories} from "./utils/directories.js"
 
 // file system & path utils
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function directories(path) {
-    // assumption: path ends with a filename
-    let all = path.split("/");
-    let dirs = all.slice(0, all.length - 1)
-
-    return dirs.join("/")
-}
 
 function getTitle(dom) {
     const document = dom.window.document;
@@ -159,10 +150,10 @@ export async function traverse(
 
 
 async function main() {
-    const [inputDirectory, templateFile, outputDirectory, isDryRun] = process.argv.slice(2)
+    const [inputDirectory, outputDirectory, isDryRun] = process.argv.slice(2)
 
-    if (!(inputDirectory && templateFile && outputDirectory)) {
-        console.log("Usage: node . inputDirectory tempateFile outputDirectory");
+    if (!(inputDirectory && outputDirectory)) {
+        console.log("Usage: node . inputDirectory outputDirectory");
         return;
     }
 

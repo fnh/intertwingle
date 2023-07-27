@@ -1,9 +1,9 @@
 import { readFile, writeFile, copyFile } from "node:fs/promises";
 import path from "path";
-
 import * as fs from 'fs';
-
 import jsdom from "jsdom";
+import {directories} from "./utils/directories.js"
+
 const { JSDOM } = jsdom;
 
 const INTERTWINGLE = "intertwingle"
@@ -46,16 +46,6 @@ function toTemplateMeta(templateContent, url) {
     return { name: templateName, content: templateContent }
 }
 
-
-function directories(path) {
-    // assumption: path ends with a filename
-    let all = path.split("/");
-    let dirs = all.slice(0, all.length - 1)
-
-    return dirs.join("/")
-
-}
-
 export async function createPages(metamodel) {
 
     let pages = metamodel.pages
@@ -77,11 +67,20 @@ export async function createPages(metamodel) {
     }
 
     for (let page of contentPages) {
-        // let content = await readFile(page.filename, { encoding: "utf-8" });
-        //let contentDom = new JSDOM(content, { url: globalProperties.url });
+        let content = await readFile(page.filename, { encoding: "utf-8" });
+        let contentDom = new JSDOM(content, { url: globalProperties.url });
+        const metatags = [...contentDom.window.document.getElementsByTagName("meta")];
+        let useTemplate = 
+            !metatags.some(metaTag => metaTag.name === "no-template");
 
         // find appropriate template for page
-        let template = getTemplate(page, templatesMeta);
+        let template = null;
+
+        if (useTemplate) {
+            template = getTemplate(page, templatesMeta);
+        } else {
+            template = await readFile(page.filename, { encoding: "utf-8" });
+        }
 
         let templateDom = new JSDOM(template, { url: globalProperties.url });
         let document = templateDom.window.document;
@@ -105,8 +104,10 @@ export async function createPages(metamodel) {
             for (let plugin of pluginsDedup) {
                 try {
                     const { default: pluginFn } = await pluginImportMap[plugin]();
+                    //console.log(pluginFn)
 
-                    await pluginFn(templateDom, page, globalProperties);
+                    // todo replace globalProperties with metamodel in plugins
+                    await pluginFn(templateDom, page, globalProperties, metamodel);
                 } catch {
                     console.log("trouble with plugin", plugin)
                 }
