@@ -6,7 +6,7 @@ import { dirname } from 'path';
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 import { fileURLToPath } from 'url';
-import {directories} from "./utils/directories.js"
+import { directories } from "./utils/directories.js"
 
 // file system & path utils
 
@@ -85,6 +85,17 @@ async function generateModel(
 
     const textContent = (d.body.textContent.trim() || "");
 
+    let publicationDate = null;
+    let [firstTimeTag] = [...d.getElementsByTagName("time")];
+    if (!firstTimeTag) {
+        let [art] = [...d.getElementsByTagName("article")];
+        if (art && art.dataset.firstPublished) {
+            publicationDate = art.dataset.firstPublished;
+        }
+    } else {
+        publicationDate = firstTimeTag?.dateTime
+    }
+
     let pageModel = {
         inputDirectory,
         filename,
@@ -93,6 +104,7 @@ async function generateModel(
         title: titleOfArticle,
         textContent,
         isPublished,
+        publicationDate,
 
         category: guessCategory(outfileRelativeToOutDir, metaTags),
         wordCount: simpleWordCount(d),
@@ -101,6 +113,7 @@ async function generateModel(
             internal: links.map(l => l.href).filter(href => href.startsWith(url)),
             external: links.map(l => l.href).filter(href => !href.startsWith(url) && href.startsWith("http"))
         },
+
         isTemplate,
 
         outdir,

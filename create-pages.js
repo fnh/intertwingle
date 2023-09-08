@@ -2,7 +2,7 @@ import { readFile, writeFile, copyFile } from "node:fs/promises";
 import path from "path";
 import * as fs from 'fs';
 import jsdom from "jsdom";
-import {directories} from "./utils/directories.js"
+import { directories } from "./utils/directories.js"
 
 const { JSDOM } = jsdom;
 
@@ -70,7 +70,7 @@ export async function createPages(metamodel) {
         let content = await readFile(page.filename, { encoding: "utf-8" });
         let contentDom = new JSDOM(content, { url: globalProperties.url });
         const metatags = [...contentDom.window.document.getElementsByTagName("meta")];
-        let useTemplate = 
+        let useTemplate =
             !metatags.some(metaTag => metaTag.name === "no-template");
 
         // find appropriate template for page
@@ -85,53 +85,58 @@ export async function createPages(metamodel) {
         let templateDom = new JSDOM(template, { url: globalProperties.url });
         let document = templateDom.window.document;
 
-        let intertwingledTags = document.getElementsByTagName(INTERTWINGLE);
+        let intertwingledTags = [...document.getElementsByTagName(INTERTWINGLE)];
 
-        if (intertwingledTags.length) {
+        for (let intertwinglePlugin of intertwingledTags) {
 
-            let plugins =
-                [...intertwingledTags].map(t => t.getAttribute("plugin"));
-
-            let pluginsDedup =
-                Array.from(new Set(plugins));
-
-            let pluginImportMap =
-                pluginsDedup.reduce((importMap, plugin) => {
-                    importMap[plugin] = () => import(`./plugins/${plugin}.js`);
-                    return importMap;
-                }, {});
-
-            for (let plugin of pluginsDedup) {
-                try {
-                    const { default: pluginFn } = await pluginImportMap[plugin]();
-                    //console.log(pluginFn)
-
-                    // todo replace globalProperties with metamodel in plugins
-                    await pluginFn(templateDom, page, globalProperties, metamodel);
-                } catch {
-                    console.log("trouble with plugin", plugin)
+            let getPluginParams = (pluginTag) => {
+                let params = {};
+                for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
+                    params[attr] = pluginTag.getAttribute(attr);
                 }
-
+                return params;
             }
 
-            if (!fs.existsSync(directories(page.outputPath))) {
-                fs.mkdirSync(directories(page.outputPath), { recursive: true })
+            let pluginName = intertwinglePlugin.getAttribute("plugin");
+
+            let pluginParams = getPluginParams(intertwinglePlugin);
+
+            let pluginImport = () => import(`./plugins/${pluginName}.js`)
+
+            try {
+                const { default: pluginFn } = await pluginImport();
+                //console.log(pluginFn)
+
+                // todo replace globalProperties with metamodel in plugins
+                await pluginFn(
+                    templateDom,
+                    page,
+                    globalProperties,
+                    metamodel,
+                    pluginParams
+                );
+            } catch (e) {
+                console.error(e);
+                console.log("trouble with plugin", pluginName)
             }
-
-            let templateMetaRef =
-                [...templateDom.window.document.getElementsByTagName("meta")]
-                    .filter(metaEl => metaEl.name == "template")
-
-            for (let metaTag of templateMetaRef) {
-                metaTag.remove()
-            }
-
-            const contentHtml = templateDom.serialize();
-
-            await writeFile(page.outputPath, contentHtml);
-            templateDom = null;
         }
 
+        if (!fs.existsSync(directories(page.outputPath))) {
+            fs.mkdirSync(directories(page.outputPath), { recursive: true })
+        }
+
+        let templateMetaRef =
+            [...templateDom.window.document.getElementsByTagName("meta")]
+                .filter(metaEl => metaEl.name == "template")
+
+        for (let metaTag of templateMetaRef) {
+            metaTag.remove()
+        }
+
+        const contentHtml = templateDom.serialize();
+
+        await writeFile(page.outputPath, contentHtml);
+        templateDom = null;
     }
 
     for (let asset of staticAssets) {
