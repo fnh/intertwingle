@@ -46,7 +46,6 @@ function toTemplateMeta(templateContent, url) {
             .filter(meta => meta.name === "template")
             .map(metaEl => metaEl.content);
 
-    // console.log(templateContent);
     return { name: templateName, content: templateContent }
 }
 
