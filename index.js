@@ -1,50 +1,12 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "path";
 import { createPages } from "./create-pages.js"
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { generateModel } from "./create-model.js";
-
-// file system & path utils
+import { traverse } from "./traverse.js"
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function isExcluded(name, forbidden = []) {
-    return name[0] === "." || forbidden.includes(name);
-}
-
-let websiteModel = [];
-
-export async function traverse(
-    directoryPath,
-    processFn = () => { }
-) {
-    const files =
-        await readdir(directoryPath, { withFileTypes: true });
-
-    for (const file of files) {
-        const filePath = path.join(directoryPath, file.name);
-
-        if (file.isDirectory()) {
-            if (isExcluded(file.name)) {
-                // what to do?
-            } else {
-                let result = await traverse(filePath, processFn);
-            }
-        } else {
-            if (isExcluded(file.name)) {
-                // what to do?
-            } else {
-                let fn = await processFn(filePath);
-                websiteModel.push(fn)
-            }
-        }
-    }
-
-    return websiteModel;
-}
-
-
 
 async function main() {
     const [inputDirectory, outputDirectory, isDryRun] = process.argv.slice(2)
@@ -67,10 +29,11 @@ async function main() {
     );
 
     if (dryRun) {
+        console.log("Dry run, only builds models, but doesn't create output");
         return;
     }
 
-    createPages({ pages: metamodel, globalProperties }); // await??
+    await createPages({ pages: metamodel, globalProperties });
 }
 
 main();
