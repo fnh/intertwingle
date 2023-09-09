@@ -56,7 +56,7 @@ function toCanonicalUrl(url) {
 
 export async function createPages(metamodel) {
     const pages = metamodel.pages;
-    
+
     const staticAssets = pages.filter(isStaticAsset);
     const templates = pages.filter(isTemplate);
     const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
@@ -71,14 +71,20 @@ export async function createPages(metamodel) {
         templatesMeta.push(toTemplateMeta(templateContent, globalProperties.url));
     }
 
+    await createAll(contentPages);
+    await copyAll(staticAssets);
+}
+
+async function createAll(contentPages) {
     for (let page of contentPages) {
         await createPage({ page, templatesMeta, metamodel });
     }
+}
 
+async function copyAll(staticAssets) {
     for (let asset of staticAssets) {
         await copyAsset(asset.inputDirectory, asset.outputDirectory, asset.contentFile)
     }
-
 }
 
 async function createPage({ page, templatesMeta, metamodel }) {
@@ -99,19 +105,60 @@ async function createPage({ page, templatesMeta, metamodel }) {
     }
 
     let templateDom = new JSDOM(template, { url: globalProperties.url });
+
+    await applyPlugins({ templateDom, page, metamodel });
+
     let document = templateDom.window.document;
+    const links = [...document.getElementsByTagName("link")];
+    let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
+    if (canonicalUrlTag) {
+        canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
+    }
+
+    let templateMetaRefs =
+        [...document.getElementsByTagName("meta")]
+            .filter(metaEl => metaEl.name == "template");
+
+    for (let metaTag of templateMetaRefs) {
+        metaTag.remove();
+    }
+
+    const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
+    for (let intertwingleTag of intertwingleTags) {
+        intertwingleTag.remove();
+    }
+
+    const contentHtml = templateDom.serialize();
+
+    if (!fs.existsSync(directories(page.outputPath))) {
+        fs.mkdirSync(directories(page.outputPath), { recursive: true })
+    }
+
+    await writeFile(page.outputPath, contentHtml);
+    templateDom = null;
+}
+
+function getPluginParams(pluginTag) {
+    let params = {};
+
+    for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
+        params[attr] = pluginTag.getAttribute(attr);
+    }
+
+    return params;
+}
+
+async function applyPlugins({
+    templateDom,
+    page,
+    metamodel
+}) {
+    let document = templateDom.window.document;
+    let globalProperties = metamodel.globalProperties;
 
     let intertwingledTags = [...document.getElementsByTagName(INTERTWINGLE)];
 
     for (let intertwinglePlugin of intertwingledTags) {
-
-        let getPluginParams = (pluginTag) => {
-            let params = {};
-            for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
-                params[attr] = pluginTag.getAttribute(attr);
-            }
-            return params;
-        }
 
         let pluginName = intertwinglePlugin.getAttribute("plugin");
 
@@ -136,33 +183,4 @@ async function createPage({ page, templatesMeta, metamodel }) {
             console.log("trouble with plugin", pluginName)
         }
     }
-
-    if (!fs.existsSync(directories(page.outputPath))) {
-        fs.mkdirSync(directories(page.outputPath), { recursive: true })
-    }
-
-
-    const links = [...document.getElementsByTagName("link")];
-    let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
-    if (canonicalUrlTag) {
-        canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
-    }
-
-    let templateMetaRefs =
-        [...document.getElementsByTagName("meta")]
-            .filter(metaEl => metaEl.name == "template");
-
-    for (let metaTag of templateMetaRefs) {
-        metaTag.remove();
-    }
-
-    const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
-    for (let intertwingleTag of intertwingleTags) {
-        intertwingleTag.remove();
-    }
-
-    const contentHtml = templateDom.serialize();
-
-    await writeFile(page.outputPath, contentHtml);
-    templateDom = null;
 }
