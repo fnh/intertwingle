@@ -55,27 +55,35 @@ function toCanonicalUrl(url) {
 }
 
 export async function createPages(metamodel) {
+
+    const {staticAssets, templates, contentPages} = classifyElements(metamodel);
+    
+    const templatesMeta = await readAll(templates, metamodel.globalProperties.url);
+    await createAll({contentPages, metamodel, templatesMeta});
+    await copyAll(staticAssets);
+}
+
+function classifyElements(metamodel) {
     const pages = metamodel.pages;
 
     const staticAssets = pages.filter(isStaticAsset);
     const templates = pages.filter(isTemplate);
     const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
 
-    let globalProperties = metamodel.globalProperties;
+    return {staticAssets, templates, contentPages};
+}
 
-    // preparation step: read all template files into memory
-
+async function readAll(templates, url) {
     let templatesMeta = [];
     for (let template of templates) {
         let templateContent = await readFile(template.filename, { encoding: "utf-8" });
-        templatesMeta.push(toTemplateMeta(templateContent, globalProperties.url));
+        templatesMeta.push(toTemplateMeta(templateContent, url));
     }
 
-    await createAll(contentPages);
-    await copyAll(staticAssets);
+    return templatesMeta;
 }
 
-async function createAll(contentPages) {
+async function createAll({contentPages, templatesMeta, metamodel}) {
     for (let page of contentPages) {
         await createPage({ page, templatesMeta, metamodel });
     }
