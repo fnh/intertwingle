@@ -1,12 +1,12 @@
-import { readdir, readFile, writeFile, copyFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "path";
 import { createPages } from "./create-pages.js"
-import { simpleWordCount } from "./plugins/simple-word-count.js"
 import { dirname } from 'path';
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 import { fileURLToPath } from 'url';
 import { directories } from "./utils/directories.js"
+import { simpleWordCount } from "./utils/simple-word-count.js"
 
 // file system & path utils
 
