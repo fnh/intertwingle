@@ -46,6 +46,7 @@ function toTemplateMeta(templateContent, url) {
             .filter(meta => meta.name === "template")
             .map(metaEl => metaEl.content);
 
+   // console.log(templateContent);
     return { name: templateName, content: templateContent }
 }
 
@@ -69,7 +70,6 @@ export async function createPages(metamodel) {
 
     let templatesMeta = [];
     for (let template of templates) {
-        console.log(template.filename)
         let templateContent = await readFile(template.filename, { encoding: "utf-8" });
         templatesMeta.push(toTemplateMeta(templateContent, globalProperties.url));
     }
@@ -122,6 +122,7 @@ export async function createPages(metamodel) {
                     metamodel,
                     pluginParams
                 );
+
             } catch (e) {
                 console.error(e);
                 console.log("trouble with plugin", pluginName)
@@ -132,23 +133,22 @@ export async function createPages(metamodel) {
             fs.mkdirSync(directories(page.outputPath), { recursive: true })
         }
 
-        const doc = templateDom.window.document;
 
-        const links = [...doc.getElementsByTagName("link")];
+        const links = [...document.getElementsByTagName("link")];
         let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
         if (canonicalUrlTag) {
             canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
         }
 
         let templateMetaRefs =
-            [...doc.getElementsByTagName("meta")]
+            [...document.getElementsByTagName("meta")]
                 .filter(metaEl => metaEl.name == "template");
 
         for (let metaTag of templateMetaRefs) {
             metaTag.remove();
         }
 
-        const intertwingleTags = [...doc.getElementsByTagName(INTERTWINGLE)];
+        const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
         for (let intertwingleTag of intertwingleTags) {
             intertwingleTag.remove();
         }

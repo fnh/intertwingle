@@ -35,6 +35,14 @@ function guessCategory(relativePath, metaTags) {
     return path.split("/")[0];
 }
 
+function toFullQualifiedUrl(url, outfileRelativeToOutDir) {
+    if (url.endsWith("/") && outfileRelativeToOutDir.startsWith("/")) {
+        return url + outfileRelativeToOutDir.slice(1);
+    }
+
+    return url + outfileRelativeToOutDir;
+}
+
 async function generateModel(
     inputDirectory,
     outputDir,
@@ -79,7 +87,7 @@ async function generateModel(
 
     let links = [...d.getElementsByTagName("a")];
 
-    let fullQualifiedURL = url + outfileRelativeToOutDir;
+    let fullQualifiedURL = toFullQualifiedUrl(url, outfileRelativeToOutDir);
 
     let isPublished = !contentFile.split("/").some(x => x.startsWith("_"));
 
