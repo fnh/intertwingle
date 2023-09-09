@@ -20,6 +20,5 @@ export default async function addContent(templateDom, page, globalProperties) {
         mainContentSlot.remove();
     }
 
-
     return null;
 }

@@ -2,7 +2,7 @@ import { readFile, writeFile, copyFile } from "node:fs/promises";
 import path from "path";
 import * as fs from 'fs';
 import jsdom from "jsdom";
-import { directories } from "./utils/directories.js"
+import { directories } from "../utils/directories.js"
 
 const { JSDOM } = jsdom;
 
@@ -171,7 +171,7 @@ async function applyPlugins({
 
         let pluginParams = getPluginParams(intertwinglePlugin);
 
-        let pluginImport = () => import(`./plugins/${pluginName}.js`)
+        let pluginImport = () => import(`../plugins/${pluginName}.js`)
 
         try {
             const { default: pluginFn } = await pluginImport();

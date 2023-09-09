@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
-import {directories} from "./utils/directories.js"
-import {simpleWordCount} from "./utils/simple-word-count.js"
+import {directories} from "../utils/directories.js"
+import {simpleWordCount} from "../utils/simple-word-count.js"
 
 function getTitle(dom) {
     const document = dom.window.document;

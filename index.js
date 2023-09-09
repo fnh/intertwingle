@@ -1,12 +1,13 @@
-import { readFile } from "node:fs/promises";
 import path from "path";
-import { createPages } from "./create-pages.js"
-import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { generateModel } from "./create-model.js";
-import { traverse } from "./traverse.js"
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { readFile } from "node:fs/promises";
+
+import { createPages } from "./core/create-pages.js"
+import { generateModel } from "./core/create-model.js";
+import { traverse } from "./core/traverse.js"
+
 
 async function main() {
     const [inputDirectory, outputDirectory, isDryRun] = process.argv.slice(2)
