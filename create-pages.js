@@ -41,9 +41,16 @@ function getTemplate(page, templatesMeta) {
 function toTemplateMeta(templateContent, url) {
     let templateDom = new JSDOM(templateContent, { url });
 
-    const [templateName] = [...templateDom.window.document.getElementsByTagName("meta")].filter(meta => meta.name === "template").map(metaEl => metaEl.content);
+    const [templateName] =
+        [...templateDom.window.document.getElementsByTagName("meta")]
+            .filter(meta => meta.name === "template")
+            .map(metaEl => metaEl.content);
 
     return { name: templateName, content: templateContent }
+}
+
+function toCanonicalUrl(url) {
+    return url.endsWith("index.html") ? directories(url) + "/" : url;
 }
 
 export async function createPages(metamodel) {
@@ -62,6 +69,7 @@ export async function createPages(metamodel) {
 
     let templatesMeta = [];
     for (let template of templates) {
+        console.log(template.filename)
         let templateContent = await readFile(template.filename, { encoding: "utf-8" });
         templatesMeta.push(toTemplateMeta(templateContent, globalProperties.url));
     }
@@ -105,7 +113,6 @@ export async function createPages(metamodel) {
 
             try {
                 const { default: pluginFn } = await pluginImport();
-                //console.log(pluginFn)
 
                 // todo replace globalProperties with metamodel in plugins
                 await pluginFn(
@@ -125,12 +132,25 @@ export async function createPages(metamodel) {
             fs.mkdirSync(directories(page.outputPath), { recursive: true })
         }
 
-        let templateMetaRef =
-            [...templateDom.window.document.getElementsByTagName("meta")]
-                .filter(metaEl => metaEl.name == "template")
+        const doc = templateDom.window.document;
 
-        for (let metaTag of templateMetaRef) {
-            metaTag.remove()
+        const links = [...doc.getElementsByTagName("link")];
+        let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
+        if (canonicalUrlTag) {
+            canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
+        }
+
+        let templateMetaRefs =
+            [...doc.getElementsByTagName("meta")]
+                .filter(metaEl => metaEl.name == "template");
+
+        for (let metaTag of templateMetaRefs) {
+            metaTag.remove();
+        }
+
+        const intertwingleTags = [...doc.getElementsByTagName(INTERTWINGLE)];
+        for (let intertwingleTag of intertwingleTags) {
+            intertwingleTag.remove();
         }
 
         const contentHtml = templateDom.serialize();
