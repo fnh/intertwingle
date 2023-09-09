@@ -1,9 +1,11 @@
-export  function simpleWordCount(document, args) {
-    let d = document;
+function isNonBlank(str) {
+    return str.trim().length
+};
 
-    const textContent = (d.body.textContent.trim() || "");
-    const tokenizedText = textContent.split(" ").filter(token => token.trim().length);
-    let simpleWordCount = tokenizedText.length;
+export function simpleWordCount(document) {
+    const textContent = (document.body.textContent.trim() || "");
+    
+    const tokens = textContent.split(" ").filter(isNonBlank);
 
-    return {wordCount: simpleWordCount};
+    return { wordCount: tokens.length };
 }
