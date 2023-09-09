@@ -46,7 +46,7 @@ function toTemplateMeta(templateContent, url) {
             .filter(meta => meta.name === "template")
             .map(metaEl => metaEl.content);
 
-   // console.log(templateContent);
+    // console.log(templateContent);
     return { name: templateName, content: templateContent }
 }
 
@@ -55,13 +55,10 @@ function toCanonicalUrl(url) {
 }
 
 export async function createPages(metamodel) {
-
-    let pages = metamodel.pages
-
+    const pages = metamodel.pages;
+    
     const staticAssets = pages.filter(isStaticAsset);
-
     const templates = pages.filter(isTemplate);
-
     const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
 
     let globalProperties = metamodel.globalProperties;
@@ -75,92 +72,97 @@ export async function createPages(metamodel) {
     }
 
     for (let page of contentPages) {
-        let content = await readFile(page.filename, { encoding: "utf-8" });
-        let contentDom = new JSDOM(content, { url: globalProperties.url });
-        const metatags = [...contentDom.window.document.getElementsByTagName("meta")];
-        let useTemplate =
-            !metatags.some(metaTag => metaTag.name === "no-template");
-
-        // find appropriate template for page
-        let template = null;
-
-        if (useTemplate) {
-            template = getTemplate(page, templatesMeta);
-        } else {
-            template = await readFile(page.filename, { encoding: "utf-8" });
-        }
-
-        let templateDom = new JSDOM(template, { url: globalProperties.url });
-        let document = templateDom.window.document;
-
-        let intertwingledTags = [...document.getElementsByTagName(INTERTWINGLE)];
-
-        for (let intertwinglePlugin of intertwingledTags) {
-
-            let getPluginParams = (pluginTag) => {
-                let params = {};
-                for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
-                    params[attr] = pluginTag.getAttribute(attr);
-                }
-                return params;
-            }
-
-            let pluginName = intertwinglePlugin.getAttribute("plugin");
-
-            let pluginParams = getPluginParams(intertwinglePlugin);
-
-            let pluginImport = () => import(`./plugins/${pluginName}.js`)
-
-            try {
-                const { default: pluginFn } = await pluginImport();
-
-                // todo replace globalProperties with metamodel in plugins
-                await pluginFn(
-                    templateDom,
-                    page,
-                    globalProperties,
-                    metamodel,
-                    pluginParams
-                );
-
-            } catch (e) {
-                console.error(e);
-                console.log("trouble with plugin", pluginName)
-            }
-        }
-
-        if (!fs.existsSync(directories(page.outputPath))) {
-            fs.mkdirSync(directories(page.outputPath), { recursive: true })
-        }
-
-
-        const links = [...document.getElementsByTagName("link")];
-        let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
-        if (canonicalUrlTag) {
-            canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
-        }
-
-        let templateMetaRefs =
-            [...document.getElementsByTagName("meta")]
-                .filter(metaEl => metaEl.name == "template");
-
-        for (let metaTag of templateMetaRefs) {
-            metaTag.remove();
-        }
-
-        const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
-        for (let intertwingleTag of intertwingleTags) {
-            intertwingleTag.remove();
-        }
-
-        const contentHtml = templateDom.serialize();
-
-        await writeFile(page.outputPath, contentHtml);
-        templateDom = null;
+        await createPage({ page, templatesMeta, metamodel });
     }
 
     for (let asset of staticAssets) {
         await copyAsset(asset.inputDirectory, asset.outputDirectory, asset.contentFile)
     }
 
+}
+
+async function createPage({ page, templatesMeta, metamodel }) {
+    let globalProperties = metamodel.globalProperties;
+    let content = await readFile(page.filename, { encoding: "utf-8" });
+    let contentDom = new JSDOM(content, { url: globalProperties.url });
+    const metatags = [...contentDom.window.document.getElementsByTagName("meta")];
+    let useTemplate =
+        !metatags.some(metaTag => metaTag.name === "no-template");
+
+    // find appropriate template for page
+    let template = null;
+
+    if (useTemplate) {
+        template = getTemplate(page, templatesMeta);
+    } else {
+        template = await readFile(page.filename, { encoding: "utf-8" });
+    }
+
+    let templateDom = new JSDOM(template, { url: globalProperties.url });
+    let document = templateDom.window.document;
+
+    let intertwingledTags = [...document.getElementsByTagName(INTERTWINGLE)];
+
+    for (let intertwinglePlugin of intertwingledTags) {
+
+        let getPluginParams = (pluginTag) => {
+            let params = {};
+            for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
+                params[attr] = pluginTag.getAttribute(attr);
+            }
+            return params;
+        }
+
+        let pluginName = intertwinglePlugin.getAttribute("plugin");
+
+        let pluginParams = getPluginParams(intertwinglePlugin);
+
+        let pluginImport = () => import(`./plugins/${pluginName}.js`)
+
+        try {
+            const { default: pluginFn } = await pluginImport();
+
+            // todo replace globalProperties with metamodel in plugins
+            await pluginFn(
+                templateDom,
+                page,
+                globalProperties,
+                metamodel,
+                pluginParams
+            );
+
+        } catch (e) {
+            console.error(e);
+            console.log("trouble with plugin", pluginName)
+        }
+    }
+
+    if (!fs.existsSync(directories(page.outputPath))) {
+        fs.mkdirSync(directories(page.outputPath), { recursive: true })
+    }
+
+
+    const links = [...document.getElementsByTagName("link")];
+    let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
+    if (canonicalUrlTag) {
+        canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
+    }
+
+    let templateMetaRefs =
+        [...document.getElementsByTagName("meta")]
+            .filter(metaEl => metaEl.name == "template");
+
+    for (let metaTag of templateMetaRefs) {
+        metaTag.remove();
+    }
+
+    const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
+    for (let intertwingleTag of intertwingleTags) {
+        intertwingleTag.remove();
+    }
+
+    const contentHtml = templateDom.serialize();
+
+    await writeFile(page.outputPath, contentHtml);
+    templateDom = null;
 }
