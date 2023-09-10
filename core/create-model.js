@@ -110,7 +110,7 @@ export async function generateModel(
         publicationDate,
 
         category: guessCategory(outfileRelativeToOutDir, metaTags),
-        wordCount: simpleWordCount(d),
+        wordCount: simpleWordCount(d).wordCount,
 
         links: {
             internal: links.map(l => l.href).filter(href => href.startsWith(url)),

@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export default async function addContent(templateDom, page, globalProperties) {
+export default async function addContent({templateDom, page}) {
     let document = templateDom.window.document;
 
     let mainContentSlots = [...document.getElementsByTagName("intertwingle")].filter(el => el.getAttribute("plugin") === "main-content");

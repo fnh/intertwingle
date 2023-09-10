@@ -87,13 +87,14 @@ async function toFeed(model, items, description) {
 
 }
 
-export default async function createRssFeed(
-    templateDom,
+export default async function createRssFeed({
     page,
-    globalProperties,
-    model,
-    params,
-) {
+    metamodel,
+    pluginParams,
+    pluginElement,
+}) {
+    let model = metamodel;
+    let params = pluginParams;
 
     let categories = params.categories.split(",");
 
@@ -112,5 +113,8 @@ export default async function createRssFeed(
 
     const feed = await toFeed(model, items, description);
 
-    await writeFile(outputPath, feed)
+    await writeFile(outputPath, feed);
+
+    pluginElement.remove();
+
 }

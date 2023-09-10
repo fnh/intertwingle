@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import path from "path";
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -7,7 +9,6 @@ import { readFile } from "node:fs/promises";
 import { createPages } from "./core/create-pages.js"
 import { generateModel } from "./core/create-model.js";
 import { traverse } from "./core/traverse.js"
-
 
 async function main() {
     const [inputDirectory, outputDirectory, isDryRun] = process.argv.slice(2)
@@ -37,5 +38,4 @@ async function main() {
     await createPages({ pages: metamodel, globalProperties });
 }
 
-main();
-
+await main();

@@ -2,11 +2,20 @@ import { readFile, writeFile, copyFile } from "node:fs/promises";
 import path from "path";
 import * as fs from 'fs';
 import jsdom from "jsdom";
-import { directories } from "../utils/directories.js"
-
 const { JSDOM } = jsdom;
+import { directories } from "../utils/directories.js"
+import { applyPlugins } from "./apply-plugins.js"
 
-const INTERTWINGLE = "intertwingle"
+const INTERTWINGLE = "intertwingle";
+
+export async function createPages(metamodel) {
+
+    const { staticAssets, templates, contentPages } = classifyElements(metamodel);
+
+    const templatesMeta = await readAll(templates, metamodel.globalProperties.url);
+    await createAll({ contentPages, metamodel, templatesMeta });
+    await copyAll(staticAssets);
+}
 
 const isTemplate = page => page.isTemplate;
 const isStaticAsset = page => page.fileType === "static-asset";
@@ -31,11 +40,22 @@ async function copyAsset(
 }
 
 function getTemplate(page, templatesMeta) {
-    // TODO: generalize look up, 
-    // assume some kind of hint on which template to use in page
-    // if not then use default template
 
-    return templatesMeta[0].content;
+    if (!templatesMeta.length) {
+        return "";
+    }
+
+    if (page.category) {
+        const categoryTemplate = templatesMeta.find(t => t.name === page.category);
+        if (categoryTemplate) {
+            return categoryTemplate.content;
+        }
+    }
+
+    const defaultTemplate =
+        templatesMeta.find(t => t.name === "default");
+
+    return defaultTemplate.content || templatesMeta[0].content;
 }
 
 function toTemplateMeta(templateContent, url) {
@@ -53,14 +73,6 @@ function toCanonicalUrl(url) {
     return url.endsWith("index.html") ? directories(url) + "/" : url;
 }
 
-export async function createPages(metamodel) {
-
-    const {staticAssets, templates, contentPages} = classifyElements(metamodel);
-    
-    const templatesMeta = await readAll(templates, metamodel.globalProperties.url);
-    await createAll({contentPages, metamodel, templatesMeta});
-    await copyAll(staticAssets);
-}
 
 function classifyElements(metamodel) {
     const pages = metamodel.pages;
@@ -69,7 +81,7 @@ function classifyElements(metamodel) {
     const templates = pages.filter(isTemplate);
     const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
 
-    return {staticAssets, templates, contentPages};
+    return { staticAssets, templates, contentPages };
 }
 
 async function readAll(templates, url) {
@@ -82,7 +94,7 @@ async function readAll(templates, url) {
     return templatesMeta;
 }
 
-async function createAll({contentPages, templatesMeta, metamodel}) {
+async function createAll({ contentPages, templatesMeta, metamodel }) {
     for (let page of contentPages) {
         await createPage({ page, templatesMeta, metamodel });
     }
@@ -94,46 +106,50 @@ async function copyAll(staticAssets) {
     }
 }
 
-async function createPage({ page, templatesMeta, metamodel }) {
-    let globalProperties = metamodel.globalProperties;
-    let content = await readFile(page.filename, { encoding: "utf-8" });
-    let contentDom = new JSDOM(content, { url: globalProperties.url });
+function usesTemplate(contentDom) {
     const metatags = [...contentDom.window.document.getElementsByTagName("meta")];
-    let useTemplate =
-        !metatags.some(metaTag => metaTag.name === "no-template");
+    return !metatags.some(metaTag => metaTag.name === "no-template");
+}
 
-    // find appropriate template for page
+async function getTemplateDom({
+    contentDom,
+    page,
+    templatesMeta,
+    globalProperties
+}) {
+
     let template = null;
 
-    if (useTemplate) {
+    if (usesTemplate(contentDom)) {
         template = getTemplate(page, templatesMeta);
     } else {
         template = await readFile(page.filename, { encoding: "utf-8" });
     }
 
-    let templateDom = new JSDOM(template, { url: globalProperties.url });
+    return new JSDOM(template, { url: globalProperties.url });
+}
+
+async function createPage({ page, templatesMeta, metamodel }) {
+    let globalProperties = metamodel.globalProperties;
+    let content = await readFile(page.filename, { encoding: "utf-8" });
+    let contentDom = new JSDOM(content, { url: globalProperties.url });
+
+    let templateDom = await getTemplateDom({
+        contentDom,
+        page,
+        templatesMeta,
+        globalProperties
+    });
 
     await applyPlugins({ templateDom, page, metamodel });
 
     let document = templateDom.window.document;
-    const links = [...document.getElementsByTagName("link")];
-    let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
-    if (canonicalUrlTag) {
-        canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
-    }
 
-    let templateMetaRefs =
-        [...document.getElementsByTagName("meta")]
-            .filter(metaEl => metaEl.name == "template");
+    setCanonicalUrl(document, page);
 
-    for (let metaTag of templateMetaRefs) {
-        metaTag.remove();
-    }
+    await applyPlugins({ templateDom, page, metamodel });
 
-    const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
-    for (let intertwingleTag of intertwingleTags) {
-        intertwingleTag.remove();
-    }
+    await cleanUpTags(document);
 
     const contentHtml = templateDom.serialize();
 
@@ -142,52 +158,32 @@ async function createPage({ page, templatesMeta, metamodel }) {
     }
 
     await writeFile(page.outputPath, contentHtml);
-    templateDom = null;
 }
 
-function getPluginParams(pluginTag) {
-    let params = {};
-
-    for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
-        params[attr] = pluginTag.getAttribute(attr);
+function setCanonicalUrl(document, page) {
+    const links = [...document.getElementsByTagName("link")];
+    let canonicalUrlTag = links.find((metaEl => metaEl.rel == "canonical"));
+    if (canonicalUrlTag) {
+        canonicalUrlTag.href = toCanonicalUrl(page.fullQualifiedURL);
     }
-
-    return params;
 }
 
-async function applyPlugins({
-    templateDom,
-    page,
-    metamodel
-}) {
-    let document = templateDom.window.document;
-    let globalProperties = metamodel.globalProperties;
+async function cleanUpTags(document) {
+    removeTemplateTags(document);
 
-    let intertwingledTags = [...document.getElementsByTagName(INTERTWINGLE)];
-
-    for (let intertwinglePlugin of intertwingledTags) {
-
-        let pluginName = intertwinglePlugin.getAttribute("plugin");
-
-        let pluginParams = getPluginParams(intertwinglePlugin);
-
-        let pluginImport = () => import(`../plugins/${pluginName}.js`)
-
-        try {
-            const { default: pluginFn } = await pluginImport();
-
-            // todo replace globalProperties with metamodel in plugins
-            await pluginFn(
-                templateDom,
-                page,
-                globalProperties,
-                metamodel,
-                pluginParams
-            );
-
-        } catch (e) {
-            console.error(e);
-            console.log("trouble with plugin", pluginName)
-        }
+    const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
+    for (let intertwingleTag of intertwingleTags) {
+        intertwingleTag.remove();
     }
+}
+
+function removeTemplateTags(document) {
+    let templateMetaRefs =
+        [...document.getElementsByTagName("meta")]
+            .filter(metaEl => metaEl.name == "template");
+
+    for (let metaTag of templateMetaRefs) {
+        metaTag.remove();
+    }
+
 }

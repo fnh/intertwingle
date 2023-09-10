@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "path";
 
-function isExcluded(name, forbidden = []) {
+function isExcluded(name, forbidden = ["node_modules"]) {
     return name[0] === "." || forbidden.includes(name);
 }
 
