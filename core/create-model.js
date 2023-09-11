@@ -30,6 +30,21 @@ function guessCategory(relativePath, metaTags) {
     return path.split("/")[0];
 }
 
+function getTopics(metaTags) {
+    const topicsTag = metaTags.find(tag => tag.name === "topics");
+    
+    if (topicsTag) {
+        const topics = 
+            topicsTag.content.split(",")
+                .map(topic => topic.trim())
+                .filter(x => x);
+                
+        return topics;
+    }
+
+    return [];
+}
+
 function toFullQualifiedUrl(url, outfileRelativeToOutDir) {
     if (url.endsWith("/") && outfileRelativeToOutDir.startsWith("/")) {
         return url + outfileRelativeToOutDir.slice(1);
@@ -110,6 +125,7 @@ export async function generateModel(
         publicationDate,
 
         category: guessCategory(outfileRelativeToOutDir, metaTags),
+        topics: getTopics(metaTags),
         wordCount: simpleWordCount(d).wordCount,
 
         links: {
