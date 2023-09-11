@@ -1,13 +1,22 @@
 const INTERTWINGLE = "intertwingle";
 
-function getPluginParams(pluginTag) {
-    let params = {};
+export async function applyPlugins({
+    templateDom,
+    page,
+    metamodel
+}) {
+    let document = templateDom.window.document;
 
-    for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
-        params[attr] = pluginTag.getAttribute(attr);
+    let pluginElements = [...document.getElementsByTagName(INTERTWINGLE)];
+
+    for (let pluginElement of pluginElements) {
+        await applyPlugin({
+            pluginElement,
+            templateDom,
+            page,
+            metamodel
+        });
     }
-
-    return params;
 }
 
 async function applyPlugin({
@@ -19,6 +28,8 @@ async function applyPlugin({
     let pluginName = pluginElement.getAttribute("plugin");
 
     let pluginParams = getPluginParams(pluginElement);
+
+    // todo allow for non-built-in plugin, maybe even in script tags?!
 
     let pluginImport = () => import(`../plugins/${pluginName}.js`)
 
@@ -37,32 +48,20 @@ async function applyPlugin({
                 pluginElement,
             });
         } else {
-            console.log("already executed")
+            console.log(`${pluginName} already executed`);
         }
-
-
-
     } catch (e) {
         console.log(`Executing plugin ${pluginName} failed.`)
         console.error(e);
     }
 }
 
-export async function applyPlugins({
-    templateDom,
-    page,
-    metamodel
-}) {
-    let document = templateDom.window.document;
+function getPluginParams(pluginTag) {
+    let params = {};
 
-    let pluginElements = [...document.getElementsByTagName(INTERTWINGLE)];
-
-    for (let pluginElement of pluginElements) {
-        await applyPlugin({
-            pluginElement,
-            templateDom,
-            page,
-            metamodel
-        });
+    for (let attr of pluginTag.getAttributeNames().filter(x => x !== "plugin")) {
+        params[attr] = pluginTag.getAttribute(attr);
     }
+
+    return params;
 }
