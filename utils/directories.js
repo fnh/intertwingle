@@ -6,3 +6,9 @@ export function directories(path) {
     return dirs.join("/")
 }
 
+export function directoryWhenIndex(path) {
+    if (path.endsWith("index.html")) {
+        return directories(path) + "/";
+    }
+    return path;
+}
