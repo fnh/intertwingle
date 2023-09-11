@@ -1,3 +1,9 @@
+import path from "path";
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import { directories } from "../utils/directories.js";
+
 const INTERTWINGLE = "intertwingle";
 
 export async function applyPlugins({
@@ -31,7 +37,24 @@ async function applyPlugin({
 
     // todo allow for non-built-in plugin, maybe even in script tags?!
 
-    let pluginImport = () => import(`../plugins/${pluginName}.js`)
+    let pluginImport = () => {
+        let pluginPath = `../plugins/${pluginName}.js`;
+
+        if (pluginElement.getAttribute("path")) {
+            // for custom plugins,
+            // attribute "path" is assumed to be relative
+            // to the input directory of page
+            
+            pluginPath =
+                path.join(
+                    __dirname, 
+                    "..",
+                    directories(page.filename),
+                    `${pluginElement.getAttribute("path")}${pluginName}.js`
+                );
+        }
+        return import(pluginPath);
+    }
 
     try {
         const { default: pluginFn } = await pluginImport();
