@@ -2,13 +2,14 @@ import { htmlToElements } from "../utils/html-to-elements.js";
 import { directoryWhenIndex } from "../utils/directories.js";
 
 function toRow(page) {
-    const url = directoryWhenIndex(page.fullQualifiedURL);
+    const url = 
+        new URL(directoryWhenIndex(page.fullQualifiedURL));
 
     return `
 <tr>
     <td>${page.publicationDate}</td>
     <td>
-        <a href="${url}">${page.title}</a>
+        <a href="${url.pathname}">${page.title}</a>
     </td>
 </tr>`;
 }
