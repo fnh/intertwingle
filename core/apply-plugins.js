@@ -35,8 +35,6 @@ async function applyPlugin({
 
     let pluginParams = getPluginParams(pluginElement);
 
-    // todo allow for non-built-in plugin, maybe even in script tags?!
-
     let pluginImport = () => {
         let pluginPath = `../plugins/${pluginName}.js`;
 

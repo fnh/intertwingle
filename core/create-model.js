@@ -7,6 +7,19 @@ const { JSDOM } = jsdom;
 import {directories} from "../utils/directories.js"
 import {simpleWordCount} from "../utils/simple-word-count.js"
 
+const isTemplate = page => page.isTemplate;
+const isStaticAsset = page => page.fileType === "static-asset";
+
+export function classifyElements(metamodel) {
+    const pages = metamodel.pages;
+
+    const staticAssets = pages.filter(isStaticAsset);
+    const templates = pages.filter(isTemplate);
+    const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
+
+    return { staticAssets, templates, contentPages };
+}
+
 function getTitle(dom) {
     const document = dom.window.document;
 

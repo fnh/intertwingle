@@ -3,8 +3,9 @@ import path from "path";
 import * as fs from 'fs';
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
-import { directories } from "../utils/directories.js"
-import { applyPlugins } from "./apply-plugins.js"
+import { directories } from "../utils/directories.js";
+import { applyPlugins } from "./apply-plugins.js";
+import { classifyElements } from "./create-model.js";
 
 const INTERTWINGLE = "intertwingle";
 
@@ -16,9 +17,6 @@ export async function createPages(metamodel) {
     await createAll({ contentPages, metamodel, templatesMeta });
     await copyAll(staticAssets);
 }
-
-const isTemplate = page => page.isTemplate;
-const isStaticAsset = page => page.fileType === "static-asset";
 
 async function copyAsset(
     inputDirectory,
@@ -71,17 +69,6 @@ function toTemplateMeta(templateContent, url) {
 
 function toCanonicalUrl(url) {
     return url.endsWith("index.html") ? directories(url) + "/" : url;
-}
-
-
-function classifyElements(metamodel) {
-    const pages = metamodel.pages;
-
-    const staticAssets = pages.filter(isStaticAsset);
-    const templates = pages.filter(isTemplate);
-    const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
-
-    return { staticAssets, templates, contentPages };
 }
 
 async function readAll(templates, url) {
