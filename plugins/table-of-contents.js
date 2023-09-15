@@ -7,7 +7,7 @@ function toRow(page) {
 
     return `
 <tr>
-    <td>${page.publicationDate}</td>
+    <td><time datetime="${page.publicationDate}">${page.publicationDate}</time></td>
     <td>
         <a href="${url.pathname}">${page.title}</a>
     </td>
