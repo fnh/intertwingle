@@ -13,7 +13,10 @@ import { traverse } from "./core/traverse.js"
 async function main() {
     const [inputDirectory, outputDirectory, isDryRun] = process.argv.slice(2)
 
-    let globalPropsContent = await readFile(path.resolve(__dirname, "intertwingle.json"), { encoding: "utf-8" });
+    const globalPropertiesFile =
+        path.resolve(__dirname, inputDirectory, "intertwingle.json");
+        
+    let globalPropsContent = await readFile(globalPropertiesFile, { encoding: "utf-8" });
     let globalProperties = JSON.parse(globalPropsContent);
 
     // todo enable defaults via intertwingle json, so that the command line argument can be reduced further
