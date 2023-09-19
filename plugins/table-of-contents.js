@@ -2,7 +2,7 @@ import { htmlToElements } from "../utils/html-to-elements.js";
 import { directoryWhenIndex } from "../utils/directories.js";
 
 function toRow(page) {
-    const url = 
+    const url =
         new URL(directoryWhenIndex(page.fullQualifiedURL));
 
     return `
@@ -24,7 +24,7 @@ export default async function tableOfContents({
     const table =
         templateDom.window.document.getElementById(pluginParams.target);
 
-    const isListedCategory = page => page.category === pluginParams.category && page.isPublished;
+    const isListedCategory = page => pluginParams.category.split(",").some(cat => cat === page.category) && page.isPublished;
 
     let listedTopics =
         (pluginParams.topics || "")
