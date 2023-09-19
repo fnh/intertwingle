@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { readFile } from "node:fs/promises";
 
 import { createPages } from "./core/create-pages.js"
-import { generateModel } from "./core/create-model.js";
+import { generateModel, addBacklinks } from "./core/create-model.js";
 import { traverse } from "./core/traverse.js"
 
 async function main() {
@@ -33,10 +33,14 @@ async function main() {
         (file) => generateModel(inputDirectory, outputDirectory, file, globalProperties.url)
     );
 
+
+
     if (dryRun) {
         console.log("Dry run, only builds models, but doesn't create output");
         return;
     }
+
+    addBacklinks({ pages: metamodel });
 
     await createPages({ pages: metamodel, globalProperties });
 }

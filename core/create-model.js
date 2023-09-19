@@ -4,20 +4,39 @@ import { readFile } from "node:fs/promises";
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
-import {directories} from "../utils/directories.js"
-import {simpleWordCount} from "../utils/simple-word-count.js"
+import { directories, normUrl } from "../utils/directories.js"
+import { simpleWordCount } from "../utils/simple-word-count.js"
 
 const isTemplate = page => page.isTemplate;
 const isStaticAsset = page => page.fileType === "static-asset";
+const isContentPage = page => !isTemplate(page) && !isStaticAsset(page);
 
 export function classifyElements(metamodel) {
     const pages = metamodel.pages;
 
     const staticAssets = pages.filter(isStaticAsset);
     const templates = pages.filter(isTemplate);
-    const contentPages = pages.filter(page => !isTemplate(page) && !isStaticAsset(page));
+    const contentPages = pages.filter(isContentPage);
 
     return { staticAssets, templates, contentPages };
+}
+
+export function addBacklinks(metamodel) {
+
+    for (let p of metamodel.pages) {
+        if (isContentPage(p)) {
+            const url = normUrl(p.fullQualifiedURL);
+            const hasBacklink = p => isContentPage(p) && p.links.internal.some(backlinkCandidate => normUrl(backlinkCandidate) === url);
+            const backlinks = metamodel.pages.filter(hasBacklink).map(p => {
+                return {
+                    url: normUrl(p.fullQualifiedURL),
+                    title: p.title
+                };
+            });
+            p.backlinks = backlinks;
+        }
+    }
+
 }
 
 function getTitle(dom) {
@@ -45,13 +64,13 @@ function guessCategory(relativePath, metaTags) {
 
 function getTopics(metaTags) {
     const topicsTag = metaTags.find(tag => tag.name === "topics");
-    
+
     if (topicsTag) {
-        const topics = 
+        const topics =
             topicsTag.content.split(",")
                 .map(topic => topic.trim())
                 .filter(x => x);
-                
+
         return topics;
     }
 

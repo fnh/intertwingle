@@ -12,3 +12,13 @@ export function directoryWhenIndex(path) {
     }
     return path;
 }
+
+export function normUrl(url) {
+    // TODO consider using URL() and methods/properties from there
+
+    const cleanUrl = directoryWhenIndex(url);
+    const isCleanEnough =
+        cleanUrl.endsWith(".html") || cleanUrl.endsWith("/");
+
+    return isCleanEnough ? cleanUrl : cleanUrl + "/";
+}
