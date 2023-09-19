@@ -3,15 +3,7 @@ import * as fs from 'fs';
 import path from "path";
 
 import { classifyElements } from "../core/create-model.js";
-import { directories, directoryWhenIndex } from "../utils/directories.js"
-
-let normUrl = url => {
-    const cleanUrl = directoryWhenIndex(url);
-    const isCleanEnough =
-        cleanUrl.endsWith(".html") || cleanUrl.endsWith("/");
-
-    return isCleanEnough ? cleanUrl : cleanUrl + "/";
-}
+import { directories, normUrl } from "../utils/directories.js"
 
 export default async function contentGraph({
     templateDom,
@@ -40,7 +32,7 @@ export default async function contentGraph({
                 let targets = p.links.internal
                     .map((url) => {
                         const page = contentPages.find(isSame(url));
-                        
+
                         if (page && isCandidate(page)) {
                             return normalize(page);
                         } else {
