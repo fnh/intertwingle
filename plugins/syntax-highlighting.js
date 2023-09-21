@@ -15,7 +15,7 @@ export default async function example({
     pluginParams,
     pluginElement,
 }) {
-    const code = pluginElement.innerHTML;
+    const code = pluginElement.textContent;
     const language = pluginElement.language || "javascript";
 
     const highlightedCode =
