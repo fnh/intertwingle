@@ -19,7 +19,7 @@ export default async function example({
     const language = pluginElement.language || "javascript";
 
     const highlightedCode =
-        `<code><pre>${highlight(code, languages[language], language)}</pre></code>`;
+        highlight(code, languages[language], language);
 
     let document = templateDom.window.document;
 

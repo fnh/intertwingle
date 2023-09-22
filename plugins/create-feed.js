@@ -3,6 +3,8 @@ import jsdom from "jsdom";
 
 const { JSDOM } = jsdom;
 
+import { listify } from "../utils/listify.js";
+
 const xmlPreamble = `<?xml version="1.0" encoding="utf-8"?>`;
 
 const rss = (channel) => `<rss version="2.0">${channel}</rss>`
@@ -96,7 +98,7 @@ export default async function createRssFeed({
     let model = metamodel;
     let params = pluginParams;
 
-    let categories = params.categories.split(",");
+    let categories = listify(params.categories);
 
     let description = params.description;
 

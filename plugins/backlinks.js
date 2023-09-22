@@ -1,3 +1,5 @@
+import { listify } from "../utils/listify.js";
+
 export default async function addBacklinks({
     templateDom,
     page,
@@ -5,7 +7,7 @@ export default async function addBacklinks({
     pluginParams,
     pluginElement,
 }) {
-    let categories = pluginParams.category.split(",");
+    let categories = listify(pluginParams.category);
 
     let targetSelector = pluginParams.target || "article";
 

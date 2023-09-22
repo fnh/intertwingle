@@ -1,13 +1,15 @@
 import { htmlToElements } from "../utils/html-to-elements.js";
 import { directoryWhenIndex } from "../utils/directories.js";
+import { listify } from "../utils/listify.js";
 
 function toRow(page) {
     const url =
         new URL(directoryWhenIndex(page.fullQualifiedURL));
 
+    const formatedDate = page.publicationDate.split(" ")[0];
     return `
 <tr>
-    <td><time datetime="${page.publicationDate}">${page.publicationDate}</time></td>
+    <td><time datetime="${page.publicationDate}">${formatedDate}</time></td>
     <td>
         <a href="${url.pathname}">${page.title}</a>
     </td>
@@ -24,15 +26,12 @@ export default async function tableOfContents({
     const table =
         templateDom.window.document.getElementById(pluginParams.target);
 
-    const isListedCategory = page => pluginParams.category.split(",").some(cat => cat === page.category) && page.isPublished;
+    const isListedCategory = page => listify(pluginParams.category).some(cat => cat === page.category) && page.isPublished;
 
-    let listedTopics =
-        (pluginParams.topics || "")
-            .split(",")
-            .map(t => t.trim())
-            .filter(t => t);
 
     const isListedTopic = page => {
+        let listedTopics = listify(pluginParams.topics);
+
         return page.isPublished
             && listedTopics.some(listedTopic => page.topics.includes(listedTopic));
     }
