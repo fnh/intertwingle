@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import {  writeFile } from "node:fs/promises";
 import jsdom from "jsdom";
 
 const { JSDOM } = jsdom;
@@ -43,9 +43,8 @@ const toItem = async (page, model) => {
 
     let description = page.title; // fallback
 
-    const content = await readFile(page.filename, { encoding: "utf-8" });
-
-
+    const content = page.fileContent;
+    
     let contentDom = new JSDOM(content, { url: model.globalProperties.url });
 
     let [article] = [...contentDom.window.document.getElementsByTagName("article")]

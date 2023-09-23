@@ -149,6 +149,7 @@ export async function generateModel(
     let pageModel = {
         inputDirectory,
         filename,
+        fileContent: content,
 
         fullQualifiedURL,
         title: titleOfArticle,

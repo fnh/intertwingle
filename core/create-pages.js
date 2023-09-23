@@ -1,4 +1,4 @@
-import { readFile, writeFile, copyFile } from "node:fs/promises";
+import { writeFile, copyFile } from "node:fs/promises";
 import path from "path";
 import * as fs from 'fs';
 import jsdom from "jsdom";
@@ -74,7 +74,7 @@ function toCanonicalUrl(url) {
 async function readAll(templates, url) {
     let templatesMeta = [];
     for (let template of templates) {
-        let templateContent = await readFile(template.filename, { encoding: "utf-8" });
+        let templateContent = template.fileContent;
         templatesMeta.push(toTemplateMeta(templateContent, url));
     }
 
@@ -110,7 +110,7 @@ async function getTemplateDom({
     if (usesTemplate(contentDom)) {
         template = getTemplate(page, templatesMeta);
     } else {
-        template = await readFile(page.filename, { encoding: "utf-8" });
+        template = page.fileContent;
     }
 
     return new JSDOM(template, { url: globalProperties.url });
@@ -118,7 +118,7 @@ async function getTemplateDom({
 
 async function createPage({ page, templatesMeta, metamodel }) {
     let globalProperties = metamodel.globalProperties;
-    let content = await readFile(page.filename, { encoding: "utf-8" });
+    let content = page.fileContent;
     let contentDom = new JSDOM(content, { url: globalProperties.url });
 
     let templateDom = await getTemplateDom({
@@ -131,10 +131,13 @@ async function createPage({ page, templatesMeta, metamodel }) {
     await applyPlugins({ templateDom, page, metamodel });
 
     let document = templateDom.window.document;
-
     setCanonicalUrl(document, page);
 
-    await applyPlugins({ templateDom, page, metamodel });
+    let pluginApplicationCycles = 0;
+    while (document.getElementsByTagName(INTERTWINGLE).length && pluginApplicationCycles < 10) {
+        await applyPlugins({ templateDom, page, metamodel });
+        pluginApplicationCycles++;
+    }
 
     await cleanUpTags(document);
 
@@ -160,6 +163,7 @@ async function cleanUpTags(document) {
 
     const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
     for (let intertwingleTag of intertwingleTags) {
+        console.log("removing remaining intertwingle tag", intertwingleTag.getAttribute("plugin"))
         intertwingleTag.remove();
     }
 }
