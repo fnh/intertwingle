@@ -15,7 +15,7 @@ export default async function lastUpdatedPage({
 
     const path = new URL(latest.fullQualifiedURL).pathname;
     let content =
-        `<a href="${path}">${latest.title}</a> (<time datetime="${page.publicationDate}">${latest.publicationDate}</time>)`
+        `<a href="${path}">${latest.title}</a> (<time datetime="${latest.publicationDate}" id="lastUpdatedAt">${latest.publicationDate}</time>)`
 
     pluginElement.insertAdjacentHTML("afterend", content);
     pluginElement.remove();
