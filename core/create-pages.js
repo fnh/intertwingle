@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 import { directories } from "../utils/directories.js";
+import { listify } from "../utils/listify.js";
 import { applyPlugins } from "./apply-plugins.js";
 import { classifyElements } from "./create-model.js";
 
@@ -64,7 +65,11 @@ function toTemplateMeta(templateContent, url) {
             .filter(meta => meta.name === "template")
             .map(metaEl => metaEl.content);
 
-    return { name: templateName, content: templateContent }
+    const templates = listify(templateName).map(name => {
+        return { name, content: templateContent };
+    });
+
+    return templates;
 }
 
 function toCanonicalUrl(url) {
@@ -75,7 +80,10 @@ async function readAll(templates, url) {
     let templatesMeta = [];
     for (let template of templates) {
         let templateContent = template.fileContent;
-        templatesMeta.push(toTemplateMeta(templateContent, url));
+        const templates = toTemplateMeta(templateContent, url);
+        for (let t of templates) {
+            templatesMeta.push(t);
+        }
     }
 
     return templatesMeta;

@@ -51,15 +51,17 @@ function getTitle(dom) {
 function guessCategory(relativePath, metaTags) {
 
     if (metaTags.some(tag => tag.name === "category")) {
-        return metaTags.find(tag => tag.name === "category");
+        const category = metaTags.find(tag => tag.name === "category").content;
+        return category;
     }
 
-    let path = relativePath;
-    if (relativePath.endsWith(".html")) {
-        path = directories(path);
-    }
+    let path = 
+        relativePath.endsWith(".html") ? directories(relativePath) : relativePath;
 
-    return path.split("/")[0];
+    let index = path.startsWith("/") ? 1 :0; 
+
+    const category = path.split("/")[index];
+    return category;
 }
 
 function getTopics(metaTags) {
@@ -113,8 +115,7 @@ export async function generateModel(
     const content = await readFile(contentFile, { encoding: "utf-8" });
     let contentDom = new JSDOM(content, { url });
 
-    let [filename] = contentFile.split(".txt");
-    let [, outfileRelativeToOutDir] = filename.split(inputDirectory);
+    let [, outfileRelativeToOutDir] = contentFile.split(inputDirectory);
 
     const outdir = path.resolve(outputDir);
     const outputPath = path.join(outdir, outfileRelativeToOutDir);
@@ -131,7 +132,8 @@ export async function generateModel(
 
     let fullQualifiedURL = toFullQualifiedUrl(url, outfileRelativeToOutDir);
 
-    let isPublished = !contentFile.split("/").some(x => x.startsWith("_"));
+    // todo consider relying on meta tag rather than convention?
+    let isPublished = !contentFile.split("/").some(x => x.startsWith("_")); 
 
     const textContent = (d.body.textContent.trim() || "");
 
@@ -148,7 +150,7 @@ export async function generateModel(
 
     let pageModel = {
         inputDirectory,
-        filename,
+        filename: contentFile,
         fileContent: content,
 
         fullQualifiedURL,
