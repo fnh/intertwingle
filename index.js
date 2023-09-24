@@ -22,7 +22,7 @@ async function main() {
     // todo enable defaults via intertwingle json, so that the command line argument can be reduced further
 
     if (!(inputDirectory && outputDirectory)) {
-        console.log("Usage: node . inputDirectory outputDirectory");
+        console.log("Usage: node . inputDirectory outputDirectory [--dry-run]");
         return;
     }
 
