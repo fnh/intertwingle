@@ -1,14 +1,13 @@
-import prism from 'prismjs';
 import { readFile } from "node:fs/promises";
-import path from "path";
 
+import path from "path";
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-
+import prism from 'prismjs';
 const { highlight, languages } = prism;
 
-export default async function example({
+export default async function addSyntaxHighlighting({
     templateDom,
     page,
     metamodel,
