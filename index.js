@@ -33,14 +33,13 @@ async function main() {
         (file) => generateModel(inputDirectory, outputDirectory, file, globalProperties.url)
     );
 
-
+    // Post Process Model
+    addBacklinks({ pages: metamodel });
 
     if (dryRun) {
         console.log("Dry run, only builds models, but doesn't create output");
         return;
     }
-
-    addBacklinks({ pages: metamodel });
 
     await createPages({ pages: metamodel, globalProperties });
 }
