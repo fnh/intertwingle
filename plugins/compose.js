@@ -10,12 +10,14 @@ export default async function compose({
     const content = pluginElement.innerHTML;
     
     let document = templateDom.window.document;
-    let targets = [...document.getElementsByTagName(targetSelector)];
+    let target = document.querySelector(targetSelector);
 
-    if (targets.length) {
-        targets[0].insertAdjacentHTML("afterend", content)
-
+    if (target) {
+        target.insertAdjacentHTML("afterend", content);
+    } else {
+        console.warn("Target ", targetSelector, " not found in ", page.fullQualifiedURL)
     }
+
     pluginElement.remove();
 }
 

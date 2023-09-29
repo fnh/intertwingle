@@ -13,7 +13,7 @@ export default async function addBacklinks({
 
     if (categories.some(category => category === page.category) && page.backlinks.length) {
         let document = templateDom.window.document;
-        let slot = document.getElementsByTagName(targetSelector).item(0);
+        let slot = document.querySelector(targetSelector);
 
         let backlinksNav = document.createElement("div");
         let ul = document.createElement("ul");

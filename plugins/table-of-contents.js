@@ -23,11 +23,17 @@ export default async function tableOfContents({
     pluginParams,
     pluginElement,
 }) {
+    const selector = pluginParams.target;
+    
     const table =
-        templateDom.window.document.getElementById(pluginParams.target);
+        templateDom.window.document.getElementById(selector);
 
-    const isListedCategory = page => listify(pluginParams.category).some(cat => cat === page.category) && page.isPublished;
+    if (!table) {
+        console.log("target for table of contents not found");
+    }
 
+    const isListedCategory = page => page.isPublished 
+        && listify(pluginParams.category).some(c => c == page.category);
 
     const isListedTopic = page => {
         let listedTopics = listify(pluginParams.topics);
