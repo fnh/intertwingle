@@ -5,11 +5,11 @@ import path from "path";
 import lunr from "lunr";
 
 import { classifyElements } from "../core/create-model.js";
-import { directories, normUrl } from "../utils/directories.js"
+import { directories } from "../utils/directories.js"
 import { listify } from "../utils/listify.js"
 
 
-export default async function contentGraph({
+export default async function buildLunrIndex({
     templateDom,
     page,
     metamodel,

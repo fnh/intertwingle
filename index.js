@@ -15,9 +15,9 @@ async function main() {
 
     const globalPropertiesFile =
         path.resolve(__dirname, inputDirectory, "intertwingle.json");
-        
-    let globalPropsContent = await readFile(globalPropertiesFile, { encoding: "utf-8" });
-    let globalProperties = JSON.parse(globalPropsContent);
+
+    let globalPropertiesContent = await readFile(globalPropertiesFile, { encoding: "utf-8" });
+    let globalProperties = JSON.parse(globalPropertiesContent);
 
     // todo enable defaults via intertwingle json, so that the command line argument can be reduced further
 
@@ -28,20 +28,26 @@ async function main() {
 
     let dryRun = (isDryRun === "--dry-run");
 
-    let metamodel = await traverse(
+    const createModel = (file) => generateModel(
         inputDirectory,
-        (file) => generateModel(inputDirectory, outputDirectory, file, globalProperties.url)
+        outputDirectory,
+        file,
+        globalProperties.url
     );
 
-    // Post Process Model
-    addBacklinks({ pages: metamodel });
+    let pages = await traverse(
+        inputDirectory,
+        createModel,
+    );
+    let model = { pages, globalProperties }
+    addBacklinks(model);
 
     if (dryRun) {
         console.log("Dry run, only builds models, but doesn't create output");
         return;
     }
 
-    await createPages({ pages: metamodel, globalProperties });
+    await createPages(model);
 }
 
 await main();

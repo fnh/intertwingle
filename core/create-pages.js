@@ -10,12 +10,12 @@ import { classifyElements } from "./create-model.js";
 
 const INTERTWINGLE = "intertwingle";
 
-export async function createPages(metamodel) {
+export async function createPages(model) {
 
-    const { staticAssets, templates, contentPages } = classifyElements(metamodel);
+    const { staticAssets, templates, contentPages } = classifyElements(model);
 
-    const templatesMeta = await readAll(templates, metamodel.globalProperties.url);
-    await createAll({ contentPages, metamodel, templatesMeta });
+    const templatesMeta = await readAll(templates, model.globalProperties.url);
+    await createAll({ contentPages, metamodel: model, templatesMeta });
     await copyAll(staticAssets);
 }
 
@@ -97,7 +97,7 @@ async function createAll({ contentPages, templatesMeta, metamodel }) {
 
 async function copyAll(staticAssets) {
     for (let asset of staticAssets) {
-        await copyAsset(asset.inputDirectory, asset.outputDirectory, asset.contentFile)
+        await copyAsset(asset.inputDirectory, asset.outputDirectory, asset.filename)
     }
 }
 

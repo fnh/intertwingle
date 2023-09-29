@@ -5,14 +5,14 @@ import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
 import { directories, normUrl } from "../utils/directories.js"
-import { simpleWordCount } from "../utils/simple-word-count.js"
+import { wordCount } from "../utils/word-count.js"
 
 const isTemplate = page => page.isTemplate;
 const isStaticAsset = page => page.fileType === "static-asset";
 const isContentPage = page => !isTemplate(page) && !isStaticAsset(page);
 
-export function classifyElements(metamodel) {
-    const pages = metamodel.pages;
+export function classifyElements(model) {
+    const pages = model.pages;
 
     const staticAssets = pages.filter(isStaticAsset);
     const templates = pages.filter(isTemplate);
@@ -21,13 +21,13 @@ export function classifyElements(metamodel) {
     return { staticAssets, templates, contentPages };
 }
 
-export function addBacklinks(metamodel) {
+export function addBacklinks(model) {
 
-    for (let p of metamodel.pages) {
+    for (let p of model.pages) {
         if (isContentPage(p)) {
             const url = normUrl(p.fullQualifiedURL);
             const hasBacklink = p => isContentPage(p) && p.links.internal.some(backlinkCandidate => normUrl(backlinkCandidate) === url);
-            const backlinks = metamodel.pages.filter(hasBacklink).map(p => {
+            const backlinks = model.pages.filter(hasBacklink).map(p => {
                 return {
                     url: normUrl(p.fullQualifiedURL),
                     title: p.title
@@ -43,22 +43,20 @@ function getTitle(dom) {
     const document = dom.window.document;
 
     const headline = document.getElementsByTagName("h1")[0];
-    const value = (headline?.textContent || "").trim();
-
-    return value;
+    return (headline?.textContent || "").trim();
 }
 
-function guessCategory(relativePath, metaTags) {
+function getCategory(relativePath, metaTags) {
 
     if (metaTags.some(tag => tag.name === "category")) {
         const category = metaTags.find(tag => tag.name === "category").content;
         return category;
     }
 
-    let path = 
+    let path =
         relativePath.endsWith(".html") ? directories(relativePath) : relativePath;
 
-    let index = path.startsWith("/") ? 1 :0; 
+    let index = path.startsWith("/") ? 1 : 0;
 
     const category = path.split("/")[index];
     return category;
@@ -81,10 +79,24 @@ function getTopics(metaTags) {
 
 function toFullQualifiedUrl(url, outfileRelativeToOutDir) {
     if (url.endsWith("/") && outfileRelativeToOutDir.startsWith("/")) {
+        // omit the "/" of outfileRelativeToOutDir
         return url + outfileRelativeToOutDir.slice(1);
     }
 
     return url + outfileRelativeToOutDir;
+}
+
+function getPublicationDate(document) {
+    const [firstTimeTag] = [...document.getElementsByTagName("time")];
+    if (!firstTimeTag) {
+        const [article] = [...document.getElementsByTagName("article")];
+        if (article && article.dataset.firstPublished) {
+            return article.dataset.firstPublished;
+        }
+    } else {
+        return firstTimeTag?.dateTime;
+    }
+
 }
 
 export async function generateModel(
@@ -93,90 +105,73 @@ export async function generateModel(
     contentFile,
     url,
 ) {
-    const isStaticAsset = !contentFile.endsWith(".html");
-
-    if (isStaticAsset) {
-        let [, outfileRelativeToOutDir] = contentFile.split(inputDirectory);
-
-        const outdir = path.resolve(outputDir);
-        const outputPath = path.join(outdir, outfileRelativeToOutDir);
-
-
-        return {
-            inputDirectory,
-            contentFile,
-            outputPath,
-            outputDirectory: outputDir,
-            outfileRelativeToOutDir,
-            fileType: "static-asset"
-        };
-    }
-
-    const content = await readFile(contentFile, { encoding: "utf-8" });
-    let contentDom = new JSDOM(content, { url });
-
-    let [, outfileRelativeToOutDir] = contentFile.split(inputDirectory);
-
+    const [, outfileRelativeToOutDir] = contentFile.split(inputDirectory);
     const outdir = path.resolve(outputDir);
     const outputPath = path.join(outdir, outfileRelativeToOutDir);
 
-    const titleOfArticle = getTitle(contentDom);
-
-    let d = contentDom.window.document;
-
-    let metaTags = [...d.getElementsByTagName("meta")];
-
-    let isTemplate = metaTags.some(tag => tag.name === "template")
-
-    let links = [...d.getElementsByTagName("a")];
-
-    let fullQualifiedURL = toFullQualifiedUrl(url, outfileRelativeToOutDir);
-
-    // todo consider relying on meta tag rather than convention?
-    let isPublished = !contentFile.split("/").some(x => x.startsWith("_")); 
-
-    const textContent = (d.body.textContent.trim() || "");
-
-    let publicationDate = null;
-    let [firstTimeTag] = [...d.getElementsByTagName("time")];
-    if (!firstTimeTag) {
-        let [art] = [...d.getElementsByTagName("article")];
-        if (art && art.dataset.firstPublished) {
-            publicationDate = art.dataset.firstPublished;
-        }
-    } else {
-        publicationDate = firstTimeTag?.dateTime
+    if (!contentFile.endsWith(".html")) {
+        // it is a static asset
+        return {
+            fileType: "static-asset",
+            inputDirectory,
+            filename: contentFile,
+            outputPath,
+            outputDirectory: outputDir,
+            outfileRelativeToOutDir,
+        };
     }
 
-    let pageModel = {
+    // it is a page or a template
+
+    const content =
+        await readFile(contentFile, { encoding: "utf-8" });
+    const contentDom = new JSDOM(content, { url });
+
+    const document = contentDom.window.document;
+    
+    const metaTags = [...document.getElementsByTagName("meta")];
+
+    const isTemplate = 
+        metaTags.some(tag => tag.name == "template")
+
+    const links = [...document.getElementsByTagName("a")];
+
+    // TODO consider relying on meta tag rather than convention?
+    const isPublished = !contentFile.split("/").some(x => x.startsWith("_"));
+
+    const textContent = (document.body.textContent.trim() || "");
+
+    const isInternalLink = href => !href.startsWith(url) && href.startsWith("http");
+    const isExternalLink = href => href.startsWith(url);
+    
+    return {
         inputDirectory,
         filename: contentFile,
         fileContent: content,
 
-        fullQualifiedURL,
-        title: titleOfArticle,
+        fullQualifiedURL: toFullQualifiedUrl(url, outfileRelativeToOutDir),
+        title: getTitle(contentDom),
         textContent,
         isPublished,
-        publicationDate,
+        publicationDate: getPublicationDate(document),
 
-        category: guessCategory(outfileRelativeToOutDir, metaTags),
+        category: getCategory(outfileRelativeToOutDir, metaTags),
         topics: getTopics(metaTags),
-        wordCount: simpleWordCount(d).wordCount,
+        wordCount: wordCount(document),
 
         links: {
-            internal: links.map(l => l.href).filter(href => href.startsWith(url)),
-            external: links.map(l => l.href).filter(href => !href.startsWith(url) && href.startsWith("http"))
+            internal: links.map(l => l.href).filter(isExternalLink),
+            external: links.map(l => l.href).filter(isInternalLink),
         },
 
         isTemplate,
 
         outdir,
+        outputDirectory: outdir,
         outputPath,
         outfileRelativeToOutDir,
 
     }
-
-    return pageModel
 }
 
 
