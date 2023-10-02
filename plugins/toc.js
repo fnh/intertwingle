@@ -1,4 +1,4 @@
-import {last} from "../utils/array.js";
+import { last } from "../utils/array.js";
 
 export default async function createTableOfContents({
     templateDom,
@@ -7,9 +7,18 @@ export default async function createTableOfContents({
     pluginParams,
     pluginElement,
 }) {
-    let parent = pluginElement.parentElement;
+    let contentContainer = pluginElement.parentElement;
+    
+    const targetSelector = pluginParams.target;
+    if (targetSelector) {
+        let target = templateDom.window.document.querySelector(targetSelector);
+        if (target) {
+            contentContainer = target;
+        }
+    }
 
-    let children = [...parent.children];
+
+    let children = [...contentContainer.children];
 
     let autoIdCounter = 0;
 
