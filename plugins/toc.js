@@ -47,7 +47,6 @@ export default async function createTableOfContents({
 }
 
 function renderSection(section) {
-    console.log(section)
     return `
         <li><a href="#${section.id}">${section.title}</a>${renderSubsections(section)}</li>
     `
