@@ -52,6 +52,8 @@ It classifies each file either as content file, template or static asset.
 For every content file an appropriate template will be found and it will apply all plugins.
 The file structure of the input directory will be recreated in the output directory.
 
+## Concepts
+
 ### Content files
 
 All html files, which are no templates, are content files. For every content file a category will be derived, either from an explicit meta tag or from the directory structure. When no meta tag with name="category" and content="name-of-the-category" is found, the name of the first directory in the path of the file will be used.
