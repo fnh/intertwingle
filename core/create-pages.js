@@ -91,7 +91,11 @@ async function readAll(templates, url) {
 
 async function createAll({ contentPages, templatesMeta, metamodel }) {
     for (let page of contentPages) {
-        await createPage({ page, templatesMeta, metamodel });
+        if (page.isPublished) {
+            await createPage({ page, templatesMeta, metamodel });
+        } else {
+			console.log("skip emitting non-published page", page.filename)
+		}
     }
 }
 
