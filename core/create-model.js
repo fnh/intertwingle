@@ -77,6 +77,12 @@ function getTopics(metaTags) {
     return [];
 }
 
+function isDraft(metaTags) {
+    const draftTag = metaTags.find(tag => tag.name === "draft");
+    return !!draftTag;
+
+}
+
 function toFullQualifiedUrl(url, outfileRelativeToOutDir) {
     if (url.endsWith("/") && outfileRelativeToOutDir.startsWith("/")) {
         // omit the "/" of outfileRelativeToOutDir
@@ -136,8 +142,9 @@ export async function generateModel(
 
     const links = [...document.getElementsByTagName("a")];
 
-    // TODO consider relying on meta tag rather than convention?
-    const isPublished = !contentFile.split("/").some(x => x.startsWith("_"));
+    const publicationDate = getPublicationDate(document);
+
+    const isPublished = !isDraft(metaTags);
 
     const textContent = (document.body.textContent.trim() || "");
 
@@ -153,7 +160,7 @@ export async function generateModel(
         title: getTitle(contentDom),
         textContent,
         isPublished,
-        publicationDate: getPublicationDate(document),
+        publicationDate,
 
         category: getCategory(outfileRelativeToOutDir, metaTags),
         topics: getTopics(metaTags),
