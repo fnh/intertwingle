@@ -28,7 +28,10 @@ export default async function buildLunrIndex({
             ? p => categories.some(category => p.category == category)
             : () => true;
 
-    const pages = contentPages.filter(isCandidate);
+    const pages = 
+        contentPages
+            .filter(isCandidate)
+            .filter(p => p.isPublished);
 
     let titleLookup = {}
 
