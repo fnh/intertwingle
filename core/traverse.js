@@ -23,13 +23,11 @@ export async function traverse(
         const filePath = path.join(directoryPath, file.name);
 
         if (file.isDirectory()) {
-            let resultOfDir = await traverse(filePath, processFn);
-            for (let res of resultOfDir) {
-                results.push(res);
-            }
+            let processedFiles = await traverse(filePath, processFn);
+            results = results.concat(processedFiles);
         } else {
-            let fn = await processFn(filePath);
-            results.push(fn)
+            let processedFile = await processFn(filePath);
+            results.push(processedFile)
         }
 
     }
