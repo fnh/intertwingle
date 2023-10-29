@@ -31,7 +31,7 @@ export default async function contentGraph({
             ? p => categories.some(category => p.category == category)
             : () => true;
 
-    const pages = contentPages.filter(isCandidate);
+    const pages = contentPages.filter(page => page.isPublished && isCandidate(page));
 
     const toInternalLinks = page => {
         const isSame = (url) => p => normUrl(p.fullQualifiedURL) === normUrl(url);
