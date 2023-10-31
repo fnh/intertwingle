@@ -14,8 +14,11 @@ export default async function addSyntaxHighlighting({
     pluginParams,
     pluginElement,
 }) {
-    const code = pluginElement.textContent;
-    const language = pluginElement.language || "javascript";
+    const language = pluginParams.language || "javascript";
+    console.log(language)
+    const code = language != "html" ? pluginElement.textContent : pluginElement.innerHTML;
+
+    console.log(code);
 
     const highlightedCode =
         highlight(code, languages[language], language);
