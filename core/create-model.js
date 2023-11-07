@@ -26,7 +26,7 @@ export function addBacklinks(model) {
     for (let p of model.pages) {
         if (isContentPage(p)) {
             const url = normUrl(p.fullQualifiedURL);
-            const hasBacklink = p => isContentPage(p) && p.links.internal.some(backlinkCandidate => normUrl(backlinkCandidate) === url);
+            const hasBacklink = p => isContentPage(p) && p.isPublished && p.links.internal.some(backlinkCandidate => normUrl(backlinkCandidate) === url);
             const backlinks = model.pages.filter(hasBacklink).map(p => {
                 return {
                     url: normUrl(p.fullQualifiedURL),
@@ -134,10 +134,10 @@ export async function generateModel(
     const contentDom = new JSDOM(content, { url });
 
     const document = contentDom.window.document;
-    
+
     const metaTags = [...document.getElementsByTagName("meta")];
 
-    const isTemplate = 
+    const isTemplate =
         metaTags.some(tag => tag.name == "template")
 
     const links = [...document.getElementsByTagName("a")];
@@ -150,7 +150,7 @@ export async function generateModel(
 
     const isInternalLink = href => !href.startsWith(url) && href.startsWith("http");
     const isExternalLink = href => href.startsWith(url);
-    
+
     return {
         inputDirectory,
         filename: contentFile,
