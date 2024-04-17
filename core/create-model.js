@@ -102,8 +102,17 @@ function getPublicationDate(document) {
     } else {
         return firstTimeTag?.dateTime;
     }
-
 }
+
+function getRevisionDate(document) {
+    const revisionTimeTag = document.querySelector("time[data-revised-at]");
+    if (!revisionTimeTag) {
+        return null;
+    } else {
+        return revisionTimeTag.dateTime;
+    }
+}
+
 
 export async function generateModel(
     inputDirectory,
@@ -142,7 +151,7 @@ export async function generateModel(
 
     const links = [...document.getElementsByTagName("a")];
 
-    const publicationDate = getPublicationDate(document);
+    const publicationDate = getRevisionDate(document) ?? getPublicationDate(document);
 
     const isPublished = !isDraft(metaTags);
 
@@ -159,6 +168,7 @@ export async function generateModel(
         fullQualifiedURL: toFullQualifiedUrl(url, outfileRelativeToOutDir),
         title: getTitle(contentDom),
         textContent,
+
         isPublished,
         publicationDate,
 
