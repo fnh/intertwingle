@@ -53,6 +53,11 @@ delayed-stream@~1.0.0:
   resolved "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz"
   integrity sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==
 
+dettle@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/dettle/-/dettle-1.0.2.tgz#d0f772ca718709e1cc60335aa54362313527235c"
+  integrity sha512-pIVcNUx2/R7P45l3wEUsyrZcfbVUCKBmctUN41syh2asCXmrRndJEiNng9+8socNOAEBiBRqsQCh3HhCkOFwwg==
+
 entities@^4.4.0:
   version "4.5.0"
   resolved "https://registry.npmjs.org/entities/-/entities-4.5.0.tgz"
@@ -168,6 +173,11 @@ prismjs@^1.29.0:
   resolved "https://registry.npmjs.org/prismjs/-/prismjs-1.29.0.tgz"
   integrity sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==
 
+promise-make-naked@^2.1.1:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/promise-make-naked/-/promise-make-naked-2.1.2.tgz#8582f88893fd14b590c5552f4e3bd3deb5a18613"
+  integrity sha512-y7s8ZuHIG56JYspB24be9GFkXA1zXL85Ur9u1DKrW/tvyUoPxWgBjnalK6Nc6l7wHBcAW0c3PO07+XOsWTRuhg==
+
 psl@^1.1.33:
   version "1.9.0"
   resolved "https://registry.npmjs.org/psl/-/psl-1.9.0.tgz"
@@ -210,6 +220,11 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
+stubborn-fs@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/stubborn-fs/-/stubborn-fs-1.2.5.tgz#e5e244223166921ddf66ed5e062b6b3bf285bfd2"
+  integrity sha512-H2N9c26eXjzL/S/K+i/RHHcFanE74dptvvjM8iwzwbVcWY/zjBbgRqF3K0DY4+OD+uTTASTBvDoxPDaPN02D7g==
+
 symbol-tree@^3.2.4:
   version "3.2.4"
   resolved "https://registry.npmjs.org/symbol-tree/-/symbol-tree-3.2.4.tgz"
@@ -219,6 +234,13 @@ temml@^0.10.24:
   version "0.10.24"
   resolved "https://registry.yarnpkg.com/temml/-/temml-0.10.24.tgz#e64f5b1f678554eee1262385ee52a070cf645d7f"
   integrity sha512-72RFSFttscrdbHKCvSxIqD1ZeNH//Ut2PnQaO4DafWsQPYAtIboH1W/TpbQp3YpQrgIU7g2i7tIgnNIKsJuFTA==
+
+tiny-readdir@^2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/tiny-readdir/-/tiny-readdir-2.7.2.tgz#2db0e1860621387304789bde1e5391cecc5a07c6"
+  integrity sha512-211Pbj4W3EVVIrIkABDPlEyLNzAz1Zb921qwmkKQvx7YR90ma3wuzojFx62nptlrAlI/ict1f++r9E/+9DcWnQ==
+  dependencies:
+    promise-make-naked "^2.1.1"
 
 tough-cookie@^4.1.3:
   version "4.1.3"
@@ -256,6 +278,15 @@ w3c-xmlserializer@^5.0.0:
   integrity sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==
   dependencies:
     xml-name-validator "^5.0.0"
+
+watcher@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/watcher/-/watcher-2.3.1.tgz#0c7fc6c91d3ad6a931ee08010c2083dee39adbf9"
+  integrity sha512-d3yl+ey35h05r5EFP0TafE2jsmQUJ9cc2aernRVyAkZiu0J3+3TbNugNcqdUJDoWOfL2p+bNsN427stsBC/HnA==
+  dependencies:
+    dettle "^1.0.2"
+    stubborn-fs "^1.2.5"
+    tiny-readdir "^2.7.2"
 
 webidl-conversions@^7.0.0:
   version "7.0.0"
