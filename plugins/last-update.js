@@ -1,3 +1,5 @@
+import {listify} from "../utils/listify.js";
+
 export default async function lastUpdatedPage({
     templateDom,
     page,
@@ -5,12 +7,15 @@ export default async function lastUpdatedPage({
     pluginParams,
     pluginElement,
 }) {
+    let categories = listify(pluginParams["category"]);
+
     const reverseChronologically =
         (a, b) => b.publicationDate?.localeCompare(a.publicationDate)
 
     let [latest] =
         metamodel.pages
             .filter(page => page.isPublished && page.publicationDate)
+            .filter(page => categories.length ? categories.includes(page.category) : true)
             .sort(reverseChronologically);
 
     const path = new URL(latest.fullQualifiedURL).pathname;
