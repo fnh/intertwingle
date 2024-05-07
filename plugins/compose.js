@@ -10,7 +10,12 @@ export default async function compose({
     const content = pluginElement.innerHTML;
     
     let document = templateDom.window.document;
+
     let target = document.querySelector(targetSelector);
+
+    if (!targetSelector) {
+        target = pluginElement.parentElement;
+    }
 
     if (target) {
         target.insertAdjacentHTML("afterend", content);
