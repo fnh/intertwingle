@@ -16,11 +16,15 @@ export default async function addPreviousPage({
     pages.sort(byDateAsc);
 
     let pageIndex = pages.findIndex(p => p.fullQualifiedURL === page.fullQualifiedURL);
-    
+
     if (pageIndex > 0) {
         let previousPage = pages[pageIndex - 1];
         let document = templateDom.window.document;
-        let slot = document.querySelector(targetSelector) || pluginElement;
+        let slot = document.querySelector(targetSelector);
+
+        if (!slot) {
+            slot = pluginElement.parentElement;
+        }
 
         let previous = document.createElement("a");
         let href = new URL(previousPage.fullQualifiedURL).pathname;
@@ -30,6 +34,7 @@ export default async function addPreviousPage({
         slot.appendChild(previous);
     } else {
         // The first page has no predecessor
+        // console.log({noPredecessor: page})
     }
 
     pluginElement.remove();

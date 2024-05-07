@@ -23,7 +23,6 @@ export default async function addNextPage({
         let slot = document.querySelector(targetSelector);
 
         if (!slot) {
-            console.log("No slot, using parent element of intertwingle plugin");
             slot = pluginElement.parentElement;
         }
 
