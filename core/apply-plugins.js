@@ -16,12 +16,20 @@ export async function applyPlugins({
     let pluginElements = [...document.getElementsByTagName(INTERTWINGLE)];
 
     for (let pluginElement of pluginElements) {
-        await applyPlugin({
-            pluginElement,
-            templateDom,
-            page,
-            metamodel
-        });
+        if (pluginElement.getAttribute("plugin")) {
+            await applyPlugin({
+                pluginElement,
+                templateDom,
+                page,
+                metamodel
+            });
+        } else {
+            console.log("no plugin intertwingle element, lsiting data attributes")
+
+            for (let attr in pluginElement.dataset) {
+                console.log(attr);
+            }
+        }
     }
 }
 
@@ -42,10 +50,10 @@ async function applyPlugin({
             // for custom plugins,
             // attribute "path" is assumed to be relative
             // to the input directory of page
-            
+
             pluginPath =
                 path.join(
-                    __dirname, 
+                    __dirname,
                     "..",
                     directories(page.filename),
                     `${pluginElement.getAttribute("path")}${pluginName}.js`
@@ -69,7 +77,7 @@ async function applyPlugin({
                 pluginElement,
             });
         } else {
-            console.log(`${pluginName} already executed`);
+            // console.log(`${pluginName} already executed`);
         }
     } catch (e) {
         console.log(`Executing plugin ${pluginName} failed.`)
