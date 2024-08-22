@@ -1,5 +1,6 @@
 import { directoryWhenIndex } from "../utils/directories.js";
 import { listify } from "../utils/listify.js";
+import {  writeFile } from "node:fs/promises";
 
 export default async function pagesAsJson({
     templateDom,
@@ -26,8 +27,6 @@ export default async function pagesAsJson({
         isListed = isListedTopic;
     }
 
-    console.log(metamodel.globalProperties)
-
     let toRelativeUrl =
         page =>
             directoryWhenIndex(page.fullQualifiedURL)
@@ -43,4 +42,12 @@ export default async function pagesAsJson({
     pluginElement.insertAdjacentHTML("afterend", script)
 
     pluginElement.remove();
+
+    let outputFile = pluginParams.filename;
+    if (outputFile) {
+        let outdir = page.outdir.endsWith("/") ? page.outdir : page.outdir + "/";
+        let outputPath = outdir + outputFile;
+        await writeFile(outputPath, JSON.stringify(pagesAsJson));
+    }
+
 }
