@@ -46,18 +46,26 @@ async function applyPlugin({
     let pluginImport = () => {
         let pluginPath = `../plugins/${pluginName}.js`;
 
-        if (pluginElement.getAttribute("path")) {
-            // for custom plugins,
-            // attribute "path" is assumed to be relative
-            // to the input directory of page
-
-            pluginPath =
-                path.join(
-                    __dirname,
-                    "..",
-                    directories(page.filename),
-                    `${pluginElement.getAttribute("path")}${pluginName}.js`
-                );
+        let customPluginPath = pluginElement.getAttribute("path");
+        if (customPluginPath) {
+            if (customPluginPath.startsWith("/")) {
+                // path is starting from the root input directory
+                pluginPath =
+                    path.join(
+                        page.inputDirectory,
+                        //"..",
+                        `${pluginElement.getAttribute("path")}${pluginName}.js`
+                    );
+            } else {
+                // path is relative to the directory of current page
+                pluginPath =
+                    path.join(
+                        __dirname,
+                        "..",
+                        directories(page.filename),
+                        `${pluginElement.getAttribute("path")}${pluginName}.js`
+                    );
+            }
         }
         return import(pluginPath);
     }
