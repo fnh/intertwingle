@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import prism from 'prismjs';
+import "prismjs/components/prism-typescript.js";
 const { highlight, languages } = prism;
+
 
 export default async function addSyntaxHighlighting({
     templateDom,
@@ -14,15 +16,25 @@ export default async function addSyntaxHighlighting({
     pluginParams,
     pluginElement,
 }) {
-    const language = pluginParams.language || "javascript";
-    console.log(language)
-    const code = language != "html" ? pluginElement.textContent : pluginElement.innerHTML;
+    let language = pluginParams.language || "javascript";
 
-    console.log(code);
+    const preformatted = pluginElement.querySelector("pre");
 
+    let code;
+    let addPre = !!preformatted;
+    if (preformatted) {
+        code = preformatted.textContent;
+    } else {
+        if (language != "html") {
+            code = pluginElement.textContent;
+        } else {
+            code = pluginElement.innerHTML;
+        }
+    }
+    
     const highlightedCode =
         highlight(code, languages[language], language);
-
+        
     let document = templateDom.window.document;
 
     // inject style
@@ -32,7 +44,9 @@ export default async function addSyntaxHighlighting({
     prismMinStyles.innerHTML = styles;
     document.head.appendChild(prismMinStyles);
 
-    pluginElement.insertAdjacentHTML("afterend", highlightedCode);
+    let html = addPre ? `<pre>${highlightedCode}</pre>` : highlightedCode;
+    
+    pluginElement.insertAdjacentHTML("afterend", html);
 
     pluginElement.remove();
 }
