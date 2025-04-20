@@ -5,7 +5,7 @@ export default async function toListItems({
     pluginParams,
     pluginElement,
 }) {
-    const list = pluginElement.textContent;
+    const list = pluginElement.textContent; //FIXME - innerHTML? Or other way to keep markup around?
     
     let items = list.split("\n")
         .map(line => line.trim())

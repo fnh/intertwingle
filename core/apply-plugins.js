@@ -53,8 +53,7 @@ async function applyPlugin({
                 pluginPath =
                     path.join(
                         page.inputDirectory,
-                        //"..",
-                        `${pluginElement.getAttribute("path")}${pluginName}.js`
+                        `${customPluginPath}${pluginName}.js`
                     );
             } else {
                 // path is relative to the directory of current page
@@ -63,7 +62,7 @@ async function applyPlugin({
                         __dirname,
                         "..",
                         directories(page.filename),
-                        `${pluginElement.getAttribute("path")}${pluginName}.js`
+                        `${customPluginPath}${pluginName}.js`
                     );
             }
         }

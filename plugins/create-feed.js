@@ -1,4 +1,4 @@
-import {  writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import jsdom from "jsdom";
 
 const { JSDOM } = jsdom;
@@ -44,14 +44,21 @@ const toItem = async (page, model) => {
     let description = page.title; // fallback
 
     const content = page.fileContent;
-    
+
     let contentDom = new JSDOM(content, { url: model.globalProperties.url });
 
+    // TODO parameterize potential content container either in plugin or with more generic convention (date-attribute, etc)
     let [article] = [...contentDom.window.document.getElementsByTagName("article")]
     if (article) {
         const copy = article.cloneNode(true);
         copy.removeChild(copy.getElementsByTagName("h1")[0])
         description = cdata(copy.innerHTML.trim());
+    } else {
+        if (page.textContent) {
+            console.log("no article but has textContent", title);
+            console.log(page.textContent)
+            description = cdata(page.textContent);
+        }
     }
 
     const permaLink = page.fullQualifiedURL;

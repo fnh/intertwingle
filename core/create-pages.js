@@ -8,15 +8,22 @@ import { listify } from "../utils/listify.js";
 import { applyPlugins } from "./apply-plugins.js";
 import { classifyElements } from "./create-model.js";
 
+// import  websiteStatistics  from "../plugins/website-statistics.js";
+
+
 const INTERTWINGLE = "intertwingle";
 
-export async function createPages(model) {
+export async function createPages(model, emitAll = false) {
 
     const { staticAssets, templates, contentPages } = classifyElements(model);
 
     const templatesMeta = await readAll(templates, model.globalProperties.url);
-    await createAll({ contentPages, metamodel: model, templatesMeta });
+    await createAll({ contentPages, metamodel: model, templatesMeta }, emitAll);
     await copyAll(staticAssets);
+
+    // await websiteStatistics({metamodel: model});
+
+
 }
 
 async function copyAsset(
@@ -89,12 +96,12 @@ async function readAll(templates, url) {
     return templatesMeta;
 }
 
-async function createAll({ contentPages, templatesMeta, metamodel }) {
+async function createAll({ contentPages, templatesMeta, metamodel }, emitAll = false) {
     for (let page of contentPages) {
-        if (page.isPublished) {
+        if (page.isPublished || emitAll) {
             await createPage({ page, templatesMeta, metamodel });
         } else {
-			console.log("skip emitting non-published page", page.filename)
+			//console.log("skip emitting non-published page", page.filename)
 		}
     }
 }
@@ -146,7 +153,7 @@ async function createPage({ page, templatesMeta, metamodel }) {
     setCanonicalUrl(document, page);
 
     let pluginApplicationCycles = 0;
-    while (document.getElementsByTagName(INTERTWINGLE).length && pluginApplicationCycles < 10) {
+    while ([...document.getElementsByTagName(INTERTWINGLE)].filter(element => element.getAttribute("plugin")).length && pluginApplicationCycles < 10) {
         await applyPlugins({ templateDom, page, metamodel });
         pluginApplicationCycles++;
     }
@@ -175,7 +182,7 @@ async function cleanUpTags(document) {
 
     const intertwingleTags = [...document.getElementsByTagName(INTERTWINGLE)];
     for (let intertwingleTag of intertwingleTags) {
-        console.log("removing remaining intertwingle tag", intertwingleTag.getAttribute("plugin"))
+        //console.log("removing remaining intertwingle tag", intertwingleTag.getAttribute("plugin"))
         intertwingleTag.remove();
     }
 }

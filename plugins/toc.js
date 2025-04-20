@@ -48,7 +48,7 @@ export default async function createTableOfContents({
 
     let list = sections.map((s) => renderSection(s)).join("");
 
-    let tableOfContent = `<ul class="intertwingle-toc">${list}</ul>`;
+    let tableOfContent = `<ul class="intertwingle-toc-top">${list}</ul>`;
 
     pluginElement.insertAdjacentHTML("afterend", tableOfContent);
 

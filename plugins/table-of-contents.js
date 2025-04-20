@@ -6,12 +6,12 @@ function toRow(page) {
     const url =
         new URL(directoryWhenIndex(page.fullQualifiedURL));
 
-    const formatedDate = page.publicationDate.split(" ")[0];
+    const formatedDate = page.publicationDate?.split(" ")[0] || "";
     return `
 <tr>
     <td><time datetime="${page.publicationDate}">${formatedDate}</time></td>
     <td>
-        <a href="${url.pathname}">${page.title}</a>
+        <a href="${url.pathname}">${page.title || formatedDate}</a>
     </td>
 </tr>`;
 }
