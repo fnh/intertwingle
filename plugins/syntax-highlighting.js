@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import prism from 'prismjs';
 import "prismjs/components/prism-typescript.js";
+import "prismjs/components/prism-java.js";
 const { highlight, languages } = prism;
 
 
