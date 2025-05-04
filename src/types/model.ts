@@ -36,6 +36,7 @@ export type PageModel = {
 }
 
 export type PageModelExtended = {
+    changedModel?: boolean;
     fileType?: string
     
     inputDirectory: string,

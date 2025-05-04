@@ -21,9 +21,22 @@ export async function createPages(
 
     const { staticAssets, templates, contentPages } = classifyElements(model);
 
+    console.time("readTemplates")
     const templatesMeta = await readAll(templates, model.globalProperties.url);
+    console.timeEnd("readTemplates")
+    let nStart = model.pages.length;
     await createAll({ contentPages, metamodel: model, templatesMeta }, emitAll);
+    
+    console.log("create all done, copying static assets")
+    let nEnd = model.pages.length
+    if (nEnd > nStart) {
+        console.log("need another run");
+        await createAll({ contentPages, metamodel: model, templatesMeta }, emitAll);
+    }
+
     await copyAll(staticAssets);
+
+    console.timeEnd("createPages")
 
     // await websiteStatistics({metamodel: model});
 }
@@ -100,18 +113,20 @@ async function readAll(templates: Array<PageModelExtended>, url: string) {
 
 
 async function createAll({ contentPages, templatesMeta, metamodel }: WebsiteContent, emitAll = false) {
+    let pages = [...metamodel.pages]
+    for (let page of pages) {
+        if (isContentPage(page) && !page.changedModel) {
 
-
-    for (let page of metamodel.pages) {
-        if (isContentPage(page)) {
             if (page.isPublished || emitAll) {
-                await createPage({ page, templatesMeta, metamodel });
-            } else {
-                //console.log("skip emitting non-published page", page.filename)
+                console.time("createPage")
+                await createPage({ page, templatesMeta, metamodel })
             }
+
         }
+        // console.log(page.filename, metamodel.pages.length);
     }
 }
+
 
 async function copyAll(staticAssets: Array<PageModel>) {
     for (let asset of staticAssets) {
@@ -183,11 +198,15 @@ async function createPage({ page, templatesMeta, metamodel }: PageSource) {
 
     const contentHtml = templateDom.serialize();
 
+    // page.output = contentHtml;
+
     if (!fs.existsSync(directories(page.outputPath))) {
         fs.mkdirSync(directories(page.outputPath), { recursive: true })
     }
 
     await writeFile(page.outputPath, contentHtml);
+    console.timeEnd("createPage")
+    return page;
 }
 
 function setCanonicalUrl(document: Document, page: PageModelExtended) {

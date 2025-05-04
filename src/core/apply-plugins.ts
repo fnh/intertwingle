@@ -29,12 +29,6 @@ export async function applyPlugins({
                 page,
                 metamodel
             });
-        } else {
-            // console.log("no plugin intertwingle element, lsiting data attributes")
-
-            // for (let attr in pluginElement.dataset) {
-            //     console.log(attr);
-            // }
         }
     }
 }

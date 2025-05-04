@@ -40,6 +40,8 @@ async function main() {
     let generateWebsite = async () => {
         console.log("(re)-generating website")
 
+        console.time("createModel")
+
         const createModel = (file: string) => generateModel(
             inputDirectory,
             outputDirectory,
@@ -54,14 +56,14 @@ async function main() {
 
         let model: WebsiteModel = { pages, globalProperties }
         addBacklinks(model);
-
+        console.timeEnd("createModel")
         if (dryRun) {
             console.log("Dry run, only builds models, but doesn't create output");
             return;
         }
 
+        console.time("createPages")
         await createPages(model, generateDrafts);
-
         initialGenerationComplete = true;
     }
 

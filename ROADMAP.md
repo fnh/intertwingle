@@ -62,6 +62,5 @@ A (somewhat) prioritized list of ideas for additional features
 * Minification
 
 # Technical
-* Consider introducing typescript
 * "bring your own conventions"
 * Awareness for evolution in model (versioning via flat files)
