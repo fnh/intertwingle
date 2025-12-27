@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "jsdom": "26.1.0",
+    "jsdom": "27.4.0",
     "lunr": "^2.3.9",
     "prismjs": "^1.29.0",
     "temml": "^0.10.24",

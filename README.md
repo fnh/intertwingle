@@ -28,7 +28,7 @@ I wrote it primarily to create my <a href="https://holzer.online/">personal webs
 
 ## Requirements
 
-Node >= v18.13.0
+Node >= v22.7.0
 
 ## Usage:
 
