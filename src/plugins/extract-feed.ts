@@ -5,6 +5,7 @@ import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
 import { directories } from "../utils/directories.ts";
+import type { WebsiteModel } from "../types/model.ts";
 
 const xmlPreamble = `<?xml version="1.0" encoding="utf-8"?>`;
 
@@ -38,17 +39,21 @@ const channel = ({ title, link, description, items }) => {
     return `<channel>${titleElement(title)}${linkElement(link)}${descriptionElement(description)}${items}</channel>`
 }
 
-const toItem = async (page) => {
+const toItem = async (page, model: WebsiteModel) => {
     const publicationDate = page.getElementsByTagName("time").item(0).dateTime;
 
     //console.log({page, publicationDate})
-   
+   const permaLink = model.globalProperties.url + "notes/" + page.id + "/";
+   console.log(permaLink)
+
     const title = "Note from " + publicationDate;
     let description = cdata(page.innerHTML.trim());
     return itemElement(
         titleElement(cdata(title))
         + descriptionElement(description)
         + pubDate(publicationDate)
+        + guid(permaLink, true)
+
     );
 }
 
@@ -56,7 +61,7 @@ async function toFeed(model, items, description) {
 
     let feedItems = [];
 
-    for (let page of items) {
+    for (let page of items) { // items = article tags
         let theItem = await toItem(page, model);
         feedItems.push(theItem);
     }

@@ -26,7 +26,7 @@ export default async function extractArticles({
     let pagesToAdd: Array<PageModelExtended> = [];
 
     for (let item of items) {
-        let articleModel = { ...page }
+        let articleModel = structuredClone(page)
         articleModel.publicationDate = item.querySelector("time").dateTime;
         articleModel.outputPath = `${outputPath}/${item.id}/index.html`;
         
@@ -43,6 +43,9 @@ export default async function extractArticles({
         articleModel.fileContent = item.outerHTML;
         articleModel.wordCount = countWord(item.outerHTML);
         articleModel.backlinks = [];
+        articleModel.links.internal = [];
+        articleModel.links.external = [];
+        
         articleModel.fullQualifiedURL = model.globalProperties.url + pluginParams.filename + `${item.id}/`;
         pagesToAdd.push(articleModel);
     }
